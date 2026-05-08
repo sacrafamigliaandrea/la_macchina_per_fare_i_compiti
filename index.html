@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinque Chiavi per Rodari — La macchina per fare i compiti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1B6D3F;
+  --green-light: #2D8659;
+  --green-soft: #E8F1EC;
+  --green-deep: #134A2B;
+  --amber: #C4801A;
+  --amber-soft: #FBF1E0;
+  --blue: #2C5F8D;
+  --blue-soft: #E4ECF4;
+  --grey-deep: #5A5953;
+  --grey-mid: #8C8B85;
+  --grey-soft: #E5E1D6;
+  --grey-bg: #F5F2E9;
+  --bg: #FAF8F3;
+  --ink: #2A2A2A;
+  --ink-soft: #4A4A48;
+  --topbar-h: 72px;
+  --audio-h: 56px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+button { font-family: inherit; }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ============ TOPBAR ============ */
+.topbar {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 50;
+  position: relative;
+}
+
+.brand { display: flex; flex-direction: column; line-height: 1.2; }
+
+.brand-row1 {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+
+.brand-row1 .accent {
+  color: var(--amber);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.brand-row2 {
+  font-size: 11px;
+  color: var(--grey-mid);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.chiavi-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.chiave {
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--grey-mid);
+  min-width: 56px;
+}
+
+.chiave:hover:not(.disabled) { background: var(--grey-bg); }
+
+.chiave.active {
+  background: var(--green-soft);
+  border-color: var(--green-light);
+  color: var(--green-deep);
+}
+
+.chiave.disabled { cursor: not-allowed; opacity: 0.45; }
+.chiave-icon { width: 22px; height: 22px; }
+.chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+
+.right-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grey-bg);
+  border-radius: 100px;
+  padding: 6px 14px 6px 10px;
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid var(--grey-soft);
+}
+
+.progress-pill .count {
+  font-family: 'Lora', serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--green-deep);
+}
+
+.progress-pill .mini-track {
+  width: 60px;
+  height: 5px;
+  background: var(--grey-soft);
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+}
+
+.progress-pill .mini-fill { height: 100%; transition: width 0.3s ease; }
+.progress-pill .mini-fill.green { background: var(--green-light); }
+.progress-pill .mini-fill.amber { background: var(--amber); }
+.progress-pill .mini-fill.grey { background: var(--grey-mid); }
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--grey-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--grey-deep);
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.icon-btn:hover {
+  background: var(--grey-bg);
+  border-color: var(--grey-mid);
+}
+
+.icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 14px;
+    gap: 12px;
+    --topbar-h: 60px;
+    height: 60px;
+  }
+  .brand-row1 { font-size: 14px; }
+  .brand-row2 { display: none; }
+  .chiave { min-width: 40px; padding: 4px 6px; }
+  .chiave-num { display: none; }
+  .chiave-icon { width: 20px; height: 20px; }
+  .progress-pill { padding: 5px 10px 5px 8px; font-size: 11px; }
+  .progress-pill .mini-track { width: 40px; }
+}
+
+/* ============ AUDIO STRIP ============ */
+.audio-strip {
+  height: var(--audio-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--green);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(27,109,63,0.25);
+}
+
+.play-btn:hover { background: var(--green-deep); transform: scale(1.05); }
+.play-btn:active { transform: scale(0.94); }
+.play-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+.audio-state {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scrubber {
+  flex: 1;
+  height: 6px;
+  background: var(--grey-soft);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.scrubber-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+  width: 0%;
+  pointer-events: none;
+}
+
+.scrubber-thumb {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.audio-time {
+  font-feature-settings: 'tnum';
+  font-size: 11px;
+  color: var(--grey-mid);
+  min-width: 75px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .audio-strip {
+    --audio-h: 50px;
+    height: 50px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+  .audio-state { font-size: 12px; max-width: 110px; }
+  .audio-time { font-size: 10px; min-width: 65px; }
+}
+
+/* ============ MAIN CLOZE PAGE ============ */
+.cloze-page {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cloze-frame {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 48px 88px;
+  overflow: hidden;
+}
+
+.cloze-content {
+  max-width: 780px;
+  width: 100%;
+  font-family: 'Lora', serif;
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--ink);
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--grey-soft) transparent;
+  padding-right: 8px;
+}
+
+.cloze-content::-webkit-scrollbar { width: 6px; }
+.cloze-content::-webkit-scrollbar-track { background: transparent; }
+.cloze-content::-webkit-scrollbar-thumb {
+  background: var(--grey-soft);
+  border-radius: 3px;
+}
+
+.cloze-content p {
+  margin: 0 0 0.75em;
+  padding: 4px 8px;
+  margin-left: -8px;
+  margin-right: -8px;
+  border-radius: 4px;
+  transition: background-color 0.45s ease;
+}
+
+.cloze-content p:last-child { margin-bottom: 0; }
+
+.cloze-content p.active {
+  background-color: rgba(196, 128, 26, 0.08);
+}
+
+.cloze-content .titolo {
+  font-style: italic;
+  font-size: 17px;
+  color: var(--green-deep);
+  text-align: center;
+  margin-bottom: 1.4em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.cloze-content .titolo::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--grey-mid);
+  margin: 0 auto 12px;
+}
+
+.cloze-content .titolo::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--grey-mid);
+  margin: 12px auto 0;
+}
+
+@media (max-width: 768px) {
+  .cloze-frame { padding: 16px 18px 72px; }
+  .cloze-content { font-size: 16px; line-height: 1.65; }
+  .cloze-content .titolo { font-size: 15px; margin-bottom: 1em; }
+}
+
+@media (max-height: 720px) {
+  .cloze-content { font-size: 17px; line-height: 1.6; }
+  .cloze-frame { padding: 20px 40px 76px; }
+}
+
+@media (max-height: 580px) {
+  .cloze-content { font-size: 15px; line-height: 1.5; }
+  .cloze-frame { padding: 12px 32px 64px; }
+}
+
+/* ============ GAP ============ */
+.gap {
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  margin: 0 1px;
+  position: relative;
+}
+
+.gap-input {
+  font-family: 'Lora', serif;
+  font-size: inherit;
+  font-style: italic;
+  font-weight: 500;
+  border: none;
+  border-bottom: 2px solid var(--grey-mid);
+  background: transparent;
+  padding: 0 6px 1px;
+  text-align: center;
+  color: var(--ink);
+  outline: none;
+  transition: all 0.18s ease;
+  border-radius: 0;
+  letter-spacing: 0.01em;
+}
+
+.gap-input::placeholder {
+  color: var(--grey-mid);
+  opacity: 0.5;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+.gap-input:focus { border-bottom-color: var(--blue); background: var(--blue-soft); }
+
+.gap.solved .gap-input {
+  border-bottom-color: var(--green-light);
+  background: var(--green-soft);
+  color: var(--green-deep);
+  font-weight: 600;
+  font-style: normal;
+  pointer-events: none;
+}
+
+.gap.helped .gap-input {
+  border-bottom-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-weight: 600;
+  font-style: normal;
+}
+
+.gap.helped.solved .gap-input { pointer-events: none; }
+
+.gap.revealed .gap-input {
+  border-bottom-color: var(--grey-mid);
+  background: var(--grey-bg);
+  color: var(--grey-deep);
+  font-weight: 500;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.gap-input.shake { animation: gentle-shake 0.4s ease; }
+
+@keyframes gentle-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
+
+.gap-tools {
+  display: inline-flex;
+  margin-left: 3px;
+  gap: 2px;
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gap.focused .gap-tools, .gap:hover .gap-tools { opacity: 1; }
+.gap.solved .gap-tools, .gap.revealed .gap-tools { display: none; }
+
+.tool-btn {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--grey-deep);
+  transition: all 0.15s ease;
+}
+
+.tool-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.tool-btn.reveal:hover {
+  border-color: var(--grey-mid);
+  color: var(--grey-deep);
+  background: var(--grey-bg);
+}
+
+.tool-btn svg { width: 12px; height: 12px; stroke-width: 2; }
+
+/* ============ FAB CONCLUDI ============ */
+.fab-finish {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  padding: 12px 22px 12px 24px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(27,109,63,0.28);
+  transition: all 0.18s ease;
+  letter-spacing: 0.01em;
+  z-index: 30;
+}
+
+.fab-finish:hover {
+  background: var(--green-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(27,109,63,0.32);
+}
+
+.fab-finish svg { width: 14px; height: 14px; }
+
+@media (max-width: 768px) {
+  .fab-finish { bottom: 14px; right: 14px; padding: 10px 18px 10px 20px; font-size: 13px; }
+}
+
+/* ============ SALASTUDIO BADGES ============ */
+.salastudio-badges {
+  position: fixed;
+  top: calc(var(--topbar-h) + 8px);
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.ss-badge {
+  pointer-events: auto;
+  background: white;
+  border: 1.5px solid var(--amber);
+  border-radius: 100px;
+  padding: 8px 14px 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(196,128,26,0.18);
+  animation: badge-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber);
+  letter-spacing: 0.01em;
+  cursor: help;
+  position: relative;
+}
+
+@keyframes badge-in {
+  from { opacity: 0; transform: translateX(40px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.ss-badge-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--amber);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ss-badge-icon svg { width: 100%; height: 100%; }
+
+.ss-badge-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--ink);
+  color: white;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 10px 14px;
+  border-radius: 8px;
+  width: 240px;
+  letter-spacing: 0;
+  font-family: 'Lora', serif;
+  font-style: italic;
+  line-height: 1.45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.24);
+}
+
+.ss-badge:hover .ss-badge-tooltip { opacity: 1; visibility: visible; }
+
+@media (max-width: 768px) {
+  .salastudio-badges { top: calc(60px + 8px); right: 8px; }
+  .ss-badge { padding: 6px 10px 6px 8px; font-size: 11px; }
+  .ss-badge-icon { width: 14px; height: 14px; }
+  .ss-badge-tooltip { width: 200px; }
+}
+
+/* ============ OVERLAY ============ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 18, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.overlay.open { display: flex; animation: overlay-in 0.3s ease; }
+
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+.overlay-card {
+  background: var(--bg);
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  padding: 36px 36px 28px;
+  position: relative;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  animation: card-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.overlay-card h2 {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 24px;
+  margin: 0 0 12px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+
+.overlay-card .body {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+}
+
+.overlay-card .icon-large {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  color: var(--amber);
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0 22px;
+}
+
+.modal-stat {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.modal-stat .num {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 600;
+  display: block;
+  line-height: 1;
+}
+
+.modal-stat .lbl {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey-mid);
+  margin-top: 6px;
+  display: block;
+}
+
+.modal-stat.alone .num { color: var(--green-light); }
+.modal-stat.helped .num { color: var(--amber); }
+.modal-stat.revealed .num { color: var(--grey-mid); }
+
+.btn-overlay {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 100px;
+  border: 1px solid var(--grey-soft);
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-overlay:hover { border-color: var(--grey-mid); }
+
+.btn-overlay.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+  font-weight: 600;
+}
+
+.btn-overlay.primary:hover:not(:disabled) {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
+}
+
+.btn-overlay:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.countdown {
+  font-feature-settings: 'tnum';
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-style: italic;
+  font-family: 'Lora', serif;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+#yt-container {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-row1">Cinque <span class="accent">Chiavi</span> per Rodari</span>
+      <span class="brand-row2">La macchina per fare i compiti</span>
+    </div>
+    <nav class="chiavi-nav" aria-label="Cinque chiavi">
+      <button class="chiave active" data-level="1" title="Livello 1 — La Lente">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="13" cy="13" r="7.5"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
+        </svg>
+        <span class="chiave-num">L1</span>
+      </button>
+      <button class="chiave disabled" data-level="2" disabled title="La Bussola — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="16" cy="16" r="11"/>
+          <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="16" r="1.6" fill="white"/>
+        </svg>
+        <span class="chiave-num">L2</span>
+      </button>
+      <button class="chiave disabled" data-level="3" disabled title="Lo Specchio — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="16" cy="16" rx="9" ry="11"/>
+          <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="chiave-num">L3</span>
+      </button>
+      <button class="chiave disabled" data-level="4" disabled title="Il Ponte — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 22 Q 16 8, 28 22"/>
+          <line x1="4" y1="22" x2="28" y2="22"/>
+          <line x1="11" y1="22" x2="11" y2="16"/>
+          <line x1="16" y1="22" x2="16" y2="13"/>
+          <line x1="21" y1="22" x2="21" y2="16"/>
+        </svg>
+        <span class="chiave-num">L4</span>
+      </button>
+      <button class="chiave disabled" data-level="5" disabled title="Il Taccuino — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="7" y="5" width="18" height="22" rx="1"/>
+          <line x1="11" y1="11" x2="21" y2="11"/>
+          <line x1="11" y1="15" x2="21" y2="15"/>
+          <line x1="11" y1="19" x2="18" y2="19"/>
+        </svg>
+        <span class="chiave-num">L5</span>
+      </button>
+    </nav>
+    <div class="right-block">
+      <div class="progress-pill">
+        <span class="count"><span id="stat-found">0</span>/<span id="stat-total">19</span></span>
+        <span class="mini-track">
+          <span class="mini-fill green" id="fill-green" style="width:0"></span>
+          <span class="mini-fill amber" id="fill-amber" style="width:0"></span>
+          <span class="mini-fill grey" id="fill-grey" style="width:0"></span>
+        </span>
+      </div>
+      <button class="icon-btn" id="btn-restart-top" title="Ricomincia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="3,3 3,8 8,8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- AUDIO STRIP -->
+  <div class="audio-strip">
+    <button id="play-btn" class="play-btn" aria-label="Avvia ascolto">
+      <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="audio-state" id="audio-state">Premi per ascoltare</div>
+    <div class="scrubber" id="scrubber">
+      <div class="scrubber-fill" id="scrubber-fill"></div>
+      <div class="scrubber-thumb" id="scrubber-thumb" style="left: 0%"></div>
+    </div>
+    <div class="audio-time" id="audio-time">0:00 / 2:05</div>
+  </div>
+
+  <!-- CLOZE PAGE (single page, no scroll) -->
+  <main class="cloze-page">
+    <div class="cloze-frame">
+      <div class="cloze-content" id="cloze-content"></div>
+    </div>
+    <button class="fab-finish" id="btn-finish">
+      Concludi
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </main>
+
+</div>
+
+<div class="salastudio-badges" id="ss-badges"></div>
+<div id="yt-container"><div id="yt-player"></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- SS BLOCK OVERLAY -->
+<div class="overlay" id="ss-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="24" cy="24" r="20"/>
+      <line x1="24" y1="14" x2="24" y2="26" stroke-linecap="round"/>
+      <circle cx="24" cy="32" r="1.5" fill="currentColor"/>
+    </svg>
+    <h2>Fermati un attimo</h2>
+    <p class="body">Le parole della favola hanno bisogno di tempo per arrivare. Hai corso un po' troppo: ascolta, respira, e riprendi quando il testo è di nuovo lì con te.</p>
+    <div class="overlay-actions">
+      <button class="btn-overlay primary" id="ss-resume" disabled>
+        Riprendo con calma <span class="countdown" id="ss-countdown">(10)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPLETION OVERLAY -->
+<div class="overlay" id="finish-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
+      <circle cx="20" cy="20" r="11"/>
+      <line x1="28" y1="28" x2="38" y2="38" stroke-linecap="round"/>
+    </svg>
+    <h2 id="finish-title">Hai attraversato la prima chiave</h2>
+    <p class="body" id="finish-body">Hai ritrovato le parole della favola.</p>
+    <div class="modal-stats">
+      <div class="modal-stat alone"><span class="num" id="m-alone">0</span><span class="lbl">Da solo</span></div>
+      <div class="modal-stat helped"><span class="num" id="m-helped">0</span><span class="lbl">Con aiuto</span></div>
+      <div class="modal-stat revealed"><span class="num" id="m-revealed">0</span><span class="lbl">Rivelate</span></div>
+    </div>
+    <div class="overlay-actions">
+      <button class="btn-overlay" id="finish-back">Torna al testo</button>
+      <button class="btn-overlay primary" id="finish-restart">Ricomincia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PARAGRAPHS = [
+  { type: 'titolo', start: 0, end: 4, tokens: ['La macchina per fare i compiti'] },
+  { start: 4, end: 12.5, tokens: [
+    "Un giorno bussò alla nostra porta uno strano tipo: un ometto buffo vi dico, alto poco più di due ",
+    { gap: 'fiammiferi' }, ". Aveva in spalla una ", { gap: 'borsa' }, " più grande di lui."
+  ]},
+  { start: 12.5, end: 19, tokens: [
+    "«Ho qui delle ", { gap: 'macchine' }, " da vendere» disse. «Fate vedere» disse il babbo."
+  ]},
+  { start: 19, end: 32.5, tokens: [
+    "«Ecco, questa è una macchina per fare i compiti. Si schiaccia il bottoncino ",
+    { gap: 'rosso' }, " per fare i problemi, il bottoncino ",
+    { gap: 'giallo' }, " per svolgere i temi, il bottoncino ",
+    { gap: 'verde' }, " per imparare la geografia. La macchina fa tutto da sola in un minuto.»"
+  ]},
+  { start: 32.5, end: 41, tokens: [
+    "«Compramela, babbo!» dissi io. «Va bene, quanto volete?» «Non voglio ",
+    { gap: 'denari' }, "» disse l'omino. «Ma non lavorerete mica per pigliar caldo!»"
+  ]},
+  { start: 41, end: 49, tokens: [
+    "«No. Ma in cambio della macchina voglio il ", { gap: 'cervello' },
+    " del vostro bambino.» «Ma siete ", { gap: 'matto' }, "!» esclamò il babbo."
+  ]},
+  { start: 49, end: 66, tokens: [
+    "«State a sentire, signore» disse l'omino sorridendo. «Se i compiti glieli fa la macchina, a che cosa gli serve il cervello?» «Comprami la macchina, babbo!» implorai. «Che cosa ne faccio del cervello?» Il babbo mi guardò un poco e poi disse: «Va bene, prendete il suo cervello.»"
+  ]},
+  { start: 66, end: 79.5, tokens: [
+    "L'omino mi prese il cervello e se lo mise in una ", { gap: 'borsetta' },
+    ". Com'ero ", { gap: 'leggero' }, ", senza cervello! Tanto leggero che mi misi a ",
+    { gap: 'volare' }, " per la stanza, e se il babbo non mi avesse afferrato in tempo sarei volato giù dalla ",
+    { gap: 'finestra' }, "."
+  ]},
+  { start: 79.5, end: 91.5, tokens: [
+    "«Bisognerà tenerlo in ", { gap: 'gabbia' }, "» disse l'ometto. «Ma perché?» domandò il babbo. «Non ha più cervello, ecco perché. Se lo lasciate andare in giro volerà nei boschi come un ",
+    { gap: 'uccellino' }, " e in pochi giorni morirà di fame.»"
+  ]},
+  { start: 91.5, end: 105, tokens: [
+    "Il babbo mi rinchiuse in una gabbia, come un ", { gap: 'canarino' },
+    ". La gabbia era piccola, stretta, non mi potevo muovere. Le ", { gap: 'stecche' },
+    " mi stringevano tanto che... alla fine mi svegliai spaventato."
+  ]},
+  { start: 105, end: 124, tokens: [
+    "Meno male che era stato solo un ", { gap: 'sogno' },
+    "! Vi assicuro che mi sono subito messo a fare i ", { gap: 'compiti' }, "."
+  ]}
+];
+
+const VIDEO_ID = 'LhK_Kme3IFk';
+
+const state = {
+  player: null,
+  playerReady: false,
+  isPlaying: false,
+  duration: 125,
+  currentParaIdx: -1,
+  gaps: [],
+  syncInterval: null,
+  ss: {
+    typingBuffer: [],
+    forwardSeekCount: 0,
+    flagsRaised: new Set(),
+    blocked: false
+  }
+};
+
+function normalize(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim();
+}
+
+function formatTime(s) {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function showToast(message, duration) {
+  duration = duration || 2400;
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function buildCloze() {
+  const container = document.getElementById('cloze-content');
+  container.innerHTML = '';
+  state.gaps = [];
+  let gapIdx = 0;
+
+  PARAGRAPHS.forEach((para, paraIdx) => {
+    const p = document.createElement('p');
+    p.dataset.paraIdx = paraIdx;
+    p.dataset.start = para.start;
+    p.dataset.end = para.end;
+    if (para.type === 'titolo') p.classList.add('titolo');
+
+    para.tokens.forEach(token => {
+      if (typeof token === 'string') {
+        p.appendChild(document.createTextNode(token));
+      } else if (token.gap) {
+        const gapId = `gap-${gapIdx}`;
+        const wrap = document.createElement('span');
+        wrap.className = 'gap';
+        wrap.id = gapId;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'gap-input';
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('autocapitalize', 'off');
+        input.setAttribute('spellcheck', 'false');
+        input.dataset.gapId = gapId;
+        input.style.width = (token.gap.length * 11 + 22) + 'px';
+        input.placeholder = '____';
+
+        const tools = document.createElement('span');
+        tools.className = 'gap-tools';
+
+        const hintBtn = document.createElement('button');
+        hintBtn.className = 'tool-btn hint';
+        hintBtn.title = 'Suggerimento (mostra una lettera)';
+        hintBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6.5"/><line x1="16" y1="16" x2="21" y2="21" stroke-linecap="round"/></svg>';
+        hintBtn.addEventListener('click', e => { e.preventDefault(); giveHint(gapId); });
+
+        const revealBtn = document.createElement('button');
+        revealBtn.className = 'tool-btn reveal';
+        revealBtn.title = 'Rivela la parola';
+        revealBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12 C 5 6, 19 6, 22 12 C 19 18, 5 18, 2 12 Z"/><circle cx="12" cy="12" r="3"/></svg>';
+        revealBtn.addEventListener('click', e => { e.preventDefault(); revealGap(gapId); });
+
+        tools.appendChild(hintBtn);
+        tools.appendChild(revealBtn);
+        wrap.appendChild(input);
+        wrap.appendChild(tools);
+
+        input.addEventListener('input', () => onInput(gapId));
+        input.addEventListener('focus', () => wrap.classList.add('focused'));
+        input.addEventListener('blur', () => wrap.classList.remove('focused'));
+        input.addEventListener('keydown', e => onKeydown(e));
+
+        state.gaps.push({
+          id: gapId, answer: token.gap,
+          status: 'empty', hintLevel: 0, el: wrap, input: input
+        });
+
+        p.appendChild(wrap);
+        gapIdx++;
+      }
+    });
+
+    container.appendChild(p);
+  });
+
+  document.getElementById('stat-total').textContent = state.gaps.length;
+  updateProgress();
+}
+
+function onKeydown(e) {
+  if (e.key.length === 1) {
+    const now = Date.now();
+    state.ss.typingBuffer.push(now);
+    state.ss.typingBuffer = state.ss.typingBuffer.filter(t => now - t < 3000);
+    if (state.ss.typingBuffer.length >= 8) {
+      raiseFlag('compulsive-typing', 'Lampi di tastiera',
+        'Stai digitando in modo molto rapido. Le parole non sono al volo: ascolta e prendi il tempo che serve.');
+      state.ss.typingBuffer = [];
+    }
+  }
+}
+
+function onInput(gapId) {
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap || gap.status === 'solved' || gap.status === 'revealed') return;
+  const value = normalize(gap.input.value);
+  const target = normalize(gap.answer);
+
+  if (value === target) {
+    if (gap.hintLevel === 0) {
+      gap.status = 'solved';
+      gap.el.classList.add('solved');
+    } else {
+      gap.status = 'helped';
+      gap.el.classList.add('helped', 'solved');
+    }
+    gap.input.value = gap.answer;
+    setTimeout(() => focusNextGap(gapId), 280);
+    updateProgress();
+  } else if (value.length >= target.length && value !== target) {
+    gap.input.classList.add('shake');
+    setTimeout(() => gap.input.classList.remove('shake'), 400);
+  }
+}
+
+function giveHint(gapId) {
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap || gap.status === 'solved' || gap.status === 'revealed') return;
+  gap.hintLevel = Math.min(gap.hintLevel + 1, gap.answer.length - 1);
+  gap.input.value = gap.answer.substring(0, gap.hintLevel);
+  gap.el.classList.add('helped');
+  gap.input.focus();
+  setTimeout(() => {
+    gap.input.setSelectionRange(gap.input.value.length, gap.input.value.length);
+  }, 0);
+}
+
+function revealGap(gapId) {
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap || gap.status === 'solved' || gap.status === 'revealed') return;
+  gap.status = 'revealed';
+  gap.input.value = gap.answer;
+  gap.el.classList.remove('helped');
+  gap.el.classList.add('revealed');
+  updateProgress();
+}
+
+function focusNextGap(currentId) {
+  const idx = state.gaps.findIndex(g => g.id === currentId);
+  for (let i = idx + 1; i < state.gaps.length; i++) {
+    if (state.gaps[i].status !== 'solved' && state.gaps[i].status !== 'revealed') {
+      state.gaps[i].input.focus();
+      return;
+    }
+  }
+}
+
+function updateProgress() {
+  const total = state.gaps.length;
+  let alone = 0, helped = 0, revealed = 0;
+  state.gaps.forEach(g => {
+    if (g.status === 'solved') alone++;
+    else if (g.status === 'helped') helped++;
+    else if (g.status === 'revealed') revealed++;
+  });
+  const found = alone + helped + revealed;
+  document.getElementById('stat-found').textContent = found;
+  document.getElementById('fill-green').style.width = (alone / total * 100) + '%';
+  document.getElementById('fill-amber').style.width = (helped / total * 100) + '%';
+  document.getElementById('fill-grey').style.width = (revealed / total * 100) + '%';
+}
+
+function loadYouTubeAPI() {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.body.appendChild(tag);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  state.player = new YT.Player('yt-player', {
+    height: '1', width: '1', videoId: VIDEO_ID,
+    playerVars: { 'enablejsapi': 1, 'rel': 0, 'playsinline': 1, 'controls': 0, 'modestbranding': 1 },
+    events: {
+      'onReady': onPlayerReady,
+      'onStateChange': onPlayerStateChange,
+      'onError': onPlayerError
+    }
+  });
+};
+
+function onPlayerReady(event) {
+  state.playerReady = true;
+  if (state.player.getDuration) {
+    const d = state.player.getDuration();
+    if (d > 0) state.duration = d;
+  }
+  document.getElementById('audio-state').textContent = 'Pronto. Premi per ascoltare.';
+  document.getElementById('audio-time').textContent = `0:00 / ${formatTime(state.duration)}`;
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING) {
+    state.isPlaying = true;
+    setPlayIcon(false);
+    document.getElementById('audio-state').textContent = 'In ascolto...';
+    startSyncLoop();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    state.isPlaying = false;
+    setPlayIcon(true);
+    document.getElementById('audio-state').textContent = 'In pausa.';
+    stopSyncLoop();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    state.isPlaying = false;
+    setPlayIcon(true);
+    document.getElementById('audio-state').textContent = 'Ascolto terminato.';
+    stopSyncLoop();
+    document.querySelectorAll('.cloze-content p').forEach(el => el.classList.remove('active'));
+    state.currentParaIdx = -1;
+  }
+}
+
+function onPlayerError(event) {
+  document.getElementById('audio-state').textContent = 'Audio non disponibile';
+}
+
+function setPlayIcon(toPlay) {
+  const icon = document.getElementById('play-icon');
+  icon.innerHTML = toPlay
+    ? '<path d="M8 5v14l11-7z"/>'
+    : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+}
+
+function togglePlay() {
+  if (!state.playerReady) return;
+  if (state.isPlaying) state.player.pauseVideo();
+  else state.player.playVideo();
+}
+
+function startSyncLoop() {
+  if (state.syncInterval) clearInterval(state.syncInterval);
+  state.syncInterval = setInterval(() => {
+    if (!state.player || !state.player.getCurrentTime) return;
+    const t = state.player.getCurrentTime();
+    updatePlayerUI(t);
+    updateActiveParagraph(t);
+  }, 200);
+}
+
+function stopSyncLoop() {
+  if (state.syncInterval) {
+    clearInterval(state.syncInterval);
+    state.syncInterval = null;
+  }
+}
+
+function updatePlayerUI(t) {
+  const pct = Math.min(100, (t / state.duration) * 100);
+  document.getElementById('scrubber-fill').style.width = pct + '%';
+  document.getElementById('scrubber-thumb').style.left = pct + '%';
+  document.getElementById('audio-time').textContent = `${formatTime(t)} / ${formatTime(state.duration)}`;
+}
+
+function updateActiveParagraph(t) {
+  let activeIdx = -1;
+  for (let i = 0; i < PARAGRAPHS.length; i++) {
+    if (t >= PARAGRAPHS[i].start && t < PARAGRAPHS[i].end) {
+      activeIdx = i;
+      break;
+    }
+  }
+  if (activeIdx !== state.currentParaIdx) {
+    document.querySelectorAll('.cloze-content p').forEach((el, i) => {
+      el.classList.toggle('active', i === activeIdx);
+    });
+    state.currentParaIdx = activeIdx;
+    // se la pagina ha scroll interno (mobile/viewport stretto), porta in vista il paragrafo attivo
+    if (activeIdx >= 0) {
+      const activeEl = document.querySelector(`.cloze-content p[data-para-idx="${activeIdx}"]`);
+      const container = document.getElementById('cloze-content');
+      if (activeEl && container.scrollHeight > container.clientHeight) {
+        const rect = activeEl.getBoundingClientRect();
+        const cRect = container.getBoundingClientRect();
+        if (rect.top < cRect.top + 20 || rect.bottom > cRect.bottom - 20) {
+          activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+  }
+}
+
+function setupScrubber() {
+  const scrubber = document.getElementById('scrubber');
+  scrubber.addEventListener('click', e => {
+    if (!state.playerReady) return;
+    const rect = scrubber.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const newTime = pct * state.duration;
+    const currentTime = state.player.getCurrentTime();
+
+    // SS: salto dei passaggi (scrub avanti > 4s)
+    if (newTime > currentTime + 4) {
+      state.ss.forwardSeekCount++;
+      if (state.ss.forwardSeekCount >= 2) {
+        raiseFlag('skip-passages', 'Salto dei passaggi',
+          'Hai saltato in avanti più volte nell\'audio. La favola va ascoltata, non scorsa: torna indietro e prendi il tempo.');
+        state.ss.forwardSeekCount = 0;
+      }
+    }
+
+    state.player.seekTo(newTime, true);
+  });
+}
+
+const SS_FLAGS = {
+  'compulsive-typing': {
+    label: 'Lampi di tastiera',
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 L3 14 L11 14 L9 22 L21 10 L13 10 Z"/></svg>'
+  },
+  'skip-passages': {
+    label: 'Salto dei passaggi',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L9 11 L13 15 L21 7"/><polyline points="15 7 21 7 21 13"/></svg>'
+  }
+};
+
+function raiseFlag(type, label, message) {
+  if (state.ss.flagsRaised.has(type)) return;
+  state.ss.flagsRaised.add(type);
+
+  const config = SS_FLAGS[type];
+  const badge = document.createElement('div');
+  badge.className = 'ss-badge';
+  badge.dataset.type = type;
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'ss-badge-icon';
+  iconSpan.innerHTML = config.icon;
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = config.label;
+  const tooltip = document.createElement('div');
+  tooltip.className = 'ss-badge-tooltip';
+  tooltip.textContent = message;
+  badge.appendChild(iconSpan);
+  badge.appendChild(labelSpan);
+  badge.appendChild(tooltip);
+  document.getElementById('ss-badges').appendChild(badge);
+
+  // overlay bloccante a entrambi i flag
+  if (state.ss.flagsRaised.size >= 2) {
+    setTimeout(() => showSSBlock(), 600);
+  }
+}
+
+function showSSBlock() {
+  if (state.ss.blocked) return;
+  state.ss.blocked = true;
+  document.getElementById('ss-overlay').classList.add('open');
+  if (state.player && state.isPlaying) state.player.pauseVideo();
+
+  const btn = document.getElementById('ss-resume');
+  const cd = document.getElementById('ss-countdown');
+  btn.disabled = true;
+  let s = 10;
+  cd.textContent = `(${s})`;
+  const interval = setInterval(() => {
+    s--;
+    cd.textContent = s > 0 ? `(${s})` : '';
+    if (s <= 0) {
+      clearInterval(interval);
+      btn.disabled = false;
+    }
+  }, 1000);
+}
+
+function closeSSBlock() {
+  document.getElementById('ss-overlay').classList.remove('open');
+  state.ss.blocked = false;
+  state.ss.flagsRaised.clear();
+}
+
+function tryFinish() {
+  let alone = 0, helped = 0, revealed = 0, empty = 0;
+  state.gaps.forEach(g => {
+    if (g.status === 'solved') alone++;
+    else if (g.status === 'helped') helped++;
+    else if (g.status === 'revealed') revealed++;
+    else empty++;
+  });
+  document.getElementById('m-alone').textContent = alone;
+  document.getElementById('m-helped').textContent = helped;
+  document.getElementById('m-revealed').textContent = revealed;
+
+  const total = state.gaps.length;
+  const found = alone + helped + revealed;
+  let title, body;
+  if (empty > 0 && found === 0) {
+    title = 'Hai sfogliato senza fermarti';
+    body = `Sei arrivato in fondo senza ritrovare nessuna parola. La favola di Rodari non si svela così. Quando vuoi, ricomincia con calma.`;
+  } else if (empty > 0) {
+    title = 'Hai fatto un buon pezzo di strada';
+    body = `Hai ritrovato ${found} parole su ${total}. Le altre ${empty} ti aspettano: torna indietro a cercarle, oppure fermati qui — ognuno arriva fin dove riesce.`;
+  } else if (alone === total) {
+    title = 'Hai attraversato la prima chiave da solo';
+    body = `Tutte ${total} le parole ritrovate senza aiuto. Hai ascoltato bene, e il testo ora ti appartiene.`;
+  } else if (revealed === 0) {
+    title = 'Hai attraversato la prima chiave';
+    body = `Tutte le parole ritrovate. ${alone} le hai prese al volo, ${helped} con un piccolo suggerimento. Anche chiedere è leggere.`;
+  } else {
+    title = 'Hai attraversato la prima chiave';
+    body = `Hai ritrovato tutte le parole. ${alone} da solo, ${helped} con un suggerimento, ${revealed} le hai fatte rivelare. Il testo è arrivato fin dentro.`;
+  }
+  document.getElementById('finish-title').textContent = title;
+  document.getElementById('finish-body').textContent = body;
+  document.getElementById('finish-overlay').classList.add('open');
+}
+
+function closeFinishOverlay() {
+  document.getElementById('finish-overlay').classList.remove('open');
+}
+
+function restartLevel() {
+  if (!confirm('Vuoi ricominciare? Tutte le parole ritrovate e i segnali della Sala Studio verranno azzerati.')) return;
+  state.gaps.forEach(g => {
+    g.status = 'empty';
+    g.hintLevel = 0;
+    g.input.value = '';
+    g.el.classList.remove('solved', 'helped', 'revealed', 'focused');
+  });
+  state.ss.flagsRaised.clear();
+  state.ss.typingBuffer = [];
+  state.ss.forwardSeekCount = 0;
+  document.getElementById('ss-badges').innerHTML = '';
+  updateProgress();
+  closeFinishOverlay();
+  if (state.player && state.playerReady) {
+    state.player.seekTo(0, true);
+    state.player.pauseVideo();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildCloze();
+  loadYouTubeAPI();
+  setupScrubber();
+
+  document.getElementById('play-btn').addEventListener('click', togglePlay);
+  document.getElementById('btn-finish').addEventListener('click', tryFinish);
+  document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
+
+  document.querySelectorAll('.chiave.disabled').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = btn.dataset.level;
+      const names = {2: 'La Bussola', 3: 'Lo Specchio', 4: 'Il Ponte', 5: 'Il Taccuino'};
+      showToast(`${names[num]} sarà disponibile presto`);
+    });
+  });
+
+  document.getElementById('ss-resume').addEventListener('click', closeSSBlock);
+  document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
+  document.getElementById('finish-restart').addEventListener('click', restartLevel);
+
+  document.addEventListener('keydown', e => {
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  });
+});
+</script>
+
+</body>
+</html>
