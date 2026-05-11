@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinque Chiavi per Rodari — La Bussola</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1B6D3F;
+  --green-light: #2D8659;
+  --green-soft: #E8F1EC;
+  --green-deep: #134A2B;
+  --amber: #C4801A;
+  --amber-soft: #FBF1E0;
+  --amber-deep: #9C6515;
+  --blue: #2C5F8D;
+  --blue-soft: #E4ECF4;
+  --grey-deep: #5A5953;
+  --grey-mid: #8C8B85;
+  --grey-soft: #E5E1D6;
+  --grey-bg: #F5F2E9;
+  --bg: #FAF8F3;
+  --ink: #2A2A2A;
+  --ink-soft: #4A4A48;
+  --topbar-h: 72px;
+  --audio-h: 56px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+button { font-family: inherit; }
+
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+/* ============ TOPBAR ============ */
+.topbar {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 50;
+  position: relative;
+}
+
+.brand { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-row1 {
+  font-family: 'Lora', serif;
+  font-weight: 600; font-size: 17px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+.brand-row1 .accent { color: var(--amber); font-style: italic; font-weight: 500; }
+.brand-row2 {
+  font-size: 11px; color: var(--grey-mid);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.chiavi-nav { display: flex; justify-content: center; align-items: center; gap: 6px; }
+
+.chiave {
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--grey-mid);
+  min-width: 56px;
+  position: relative;
+  text-decoration: none;
+}
+.chiave:hover:not(.disabled):not(.active) { background: var(--grey-bg); }
+.chiave.active {
+  background: var(--green-soft);
+  border-color: var(--green-light);
+  color: var(--green-deep);
+  cursor: default;
+}
+.chiave.disabled { cursor: not-allowed; opacity: 0.45; }
+.chiave-icon { width: 22px; height: 22px; }
+.chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave-done {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: none;
+  align-items: center; justify-content: center;
+}
+.chiave-done svg { width: 8px; height: 8px; color: white; }
+.chiave.completed .chiave-done { display: flex; }
+.chiave.completed:not(.active) {
+  color: var(--green-deep);
+  opacity: 1;
+}
+
+.right-block { display: flex; align-items: center; gap: 12px; }
+
+.progress-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: var(--grey-bg);
+  border-radius: 100px;
+  font-size: 13px;
+  color: var(--grey-deep);
+  font-weight: 500;
+}
+.progress-dots { display: inline-flex; gap: 4px; }
+.progress-dots .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--grey-soft);
+  transition: background 0.2s;
+}
+.progress-dots .dot.solved { background: var(--green-light); }
+.progress-dots .dot.helped { background: var(--amber); }
+.progress-dots .dot.exhausted { background: var(--grey-mid); }
+
+.icon-btn {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-deep);
+  transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--grey-mid); background: var(--grey-bg); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .topbar { padding: 0 12px; gap: 12px; }
+  .brand-row1 { font-size: 14px; }
+  .brand-row2 { font-size: 10px; }
+  .chiave { min-width: 40px; padding: 4px 6px; }
+  .chiave-num { display: none; }
+  .chiave-icon { width: 20px; height: 20px; }
+  .progress-pill { display: none; }
+}
+
+/* ============ MAIN AREA: BUSSOLA ============ */
+.bussola-page {
+  flex: 1;
+  overflow: hidden;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  min-height: 0;
+}
+
+.episode-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.episode-counter {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.episode-title {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.episode-prompt {
+  font-size: 14px;
+  color: var(--grey-deep);
+  margin: 0;
+  max-width: 720px;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid var(--green-light);
+  color: var(--green-deep);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+.replay-btn:hover { background: var(--green-soft); }
+.replay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.replay-btn svg { width: 14px; height: 14px; }
+.replay-btn.playing {
+  background: var(--green-soft);
+  border-color: var(--green);
+}
+
+/* Compass grid */
+.compass-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+.compass {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+  width: 100%;
+  max-width: 920px;
+  height: 100%;
+  max-height: 480px;
+}
+.compass-card {
+  background: white;
+  border: 1.5px solid var(--grey-soft);
+  border-radius: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  font-family: 'Lora', serif;
+  position: relative;
+  user-select: none;
+  min-height: 80px;
+}
+.compass-card:hover:not(.disabled):not(.wrong):not(.solved):not(.helped):not(.exhausted) {
+  border-color: var(--green-light);
+  background: #FCFCF8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(27, 109, 63, 0.08);
+}
+.compass-card[data-dir="N"] { grid-column: 2; grid-row: 1; }
+.compass-card[data-dir="W"] { grid-column: 1; grid-row: 2; }
+.compass-card[data-dir="E"] { grid-column: 3; grid-row: 2; }
+.compass-card[data-dir="S"] { grid-column: 2; grid-row: 3; }
+
+.compass-card .dir-label {
+  position: absolute;
+  top: 8px; left: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--grey-mid);
+}
+.compass-card.wrong {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+  animation: shake 0.32s ease-out;
+}
+.compass-card.solved {
+  border-color: var(--green-light);
+  background: var(--green-soft);
+  color: var(--green-deep);
+  cursor: default;
+}
+.compass-card.helped {
+  border-color: var(--amber);
+  background: #FDF6E8;
+  color: var(--amber-deep);
+  cursor: default;
+}
+.compass-card.exhausted {
+  border-color: var(--grey-mid);
+  background: var(--grey-bg);
+  color: var(--grey-deep);
+  cursor: default;
+}
+.compass-card.exhausted.was-correct {
+  border-style: dashed;
+  border-color: var(--green-light);
+  color: var(--green-deep);
+  background: #F4F8F1;
+}
+.compass-card.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+/* Center medallion */
+.compass-center {
+  grid-column: 2; grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.compass-medallion {
+  width: 100%;
+  height: 100%;
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  border: 2px solid var(--green-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: var(--green-deep);
+}
+.medallion-icon { width: 56px; height: 56px; opacity: 0.7; }
+.medallion-attempts {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+  font-weight: 600;
+}
+.medallion-chance-dots {
+  display: flex; gap: 6px; margin-top: 8px;
+}
+.medallion-chance-dots .cdot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green-light);
+  opacity: 0.85;
+}
+.medallion-chance-dots .cdot.used { background: var(--amber); opacity: 0.7; }
+
+/* Feedback band */
+.feedback-band {
+  flex-shrink: 0;
+  min-height: 64px;
+  padding: 12px 18px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--grey-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Lora', serif;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  transition: all 0.2s ease;
+}
+.feedback-band.empty {
+  background: transparent;
+  border-color: transparent;
+  color: var(--grey-mid);
+  font-style: italic;
+  justify-content: center;
+}
+.feedback-band.wrong {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber-deep);
+}
+.feedback-band.solved {
+  border-color: var(--green-light);
+  background: var(--green-soft);
+  color: var(--green-deep);
+}
+.feedback-band.exhausted {
+  border-color: var(--grey-mid);
+  background: var(--grey-bg);
+}
+.feedback-icon { flex-shrink: 0; width: 28px; height: 28px; }
+.feedback-text { flex: 1; }
+.feedback-next-btn {
+  flex-shrink: 0;
+  background: var(--green);
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px 18px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-next-btn:hover { background: var(--green-deep); }
+.feedback-next-btn svg { width: 12px; height: 12px; }
+
+/* Bottom controls strip (progress dots + replay info) */
+.bottom-strip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 0;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--grey-mid);
+}
+
+/* ============ AUDIO BAR ============ */
+.audio-bar {
+  height: var(--audio-h);
+  background: white;
+  border-top: 1px solid var(--grey-soft);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.play-btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.play-btn:hover { background: var(--green-deep); }
+.play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.play-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+.audio-info {
+  font-size: 13px;
+  color: var(--grey-deep);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.audio-info .frag-label {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.audio-info .frag-time {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum';
+  font-size: 12px;
+  color: var(--grey-mid);
+}
+.audio-progress {
+  flex: 1;
+  height: 4px;
+  background: var(--grey-soft);
+  border-radius: 100px;
+  overflow: hidden;
+  max-width: 280px;
+}
+.audio-progress-fill {
+  height: 100%;
+  background: var(--green-light);
+  width: 0%;
+  transition: width 0.15s linear;
+}
+
+@media (max-width: 720px) {
+  .audio-bar { padding: 0 12px; gap: 8px; }
+  .audio-progress { max-width: 120px; }
+  .audio-info .frag-label { display: none; }
+}
+
+/* ============ FAB FINISH ============ */
+.fab-finish {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  padding: 12px 22px 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  z-index: 30;
+  box-shadow: 0 4px 14px rgba(27, 109, 63, 0.2);
+  font-family: 'DM Sans', sans-serif;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+.fab-finish.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.fab-finish:hover { background: var(--green-deep); }
+.fab-finish svg { width: 14px; height: 14px; }
+
+/* ============ OVERLAY ============ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 42, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  padding: 24px;
+}
+.overlay.open { opacity: 1; pointer-events: auto; }
+
+.overlay-card {
+  background: white;
+  border-radius: 18px;
+  padding: 32px 36px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+.overlay-card h2 {
+  margin: 0 0 8px;
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 26px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+.overlay-card .body {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+  line-height: 1.55;
+}
+.icon-large {
+  width: 56px; height: 56px;
+  margin: 0 auto 12px;
+  display: block;
+}
+.modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+.modal-stat {
+  background: var(--grey-bg);
+  border-radius: 12px;
+  padding: 14px 8px;
+}
+.modal-stat .num {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  font-feature-settings: 'tnum';
+  display: block;
+}
+.modal-stat .lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--grey-mid);
+  margin-top: 6px; display: block;
+}
+.modal-stat.alone .num { color: var(--green-light); }
+.modal-stat.helped .num { color: var(--amber); }
+.modal-stat.missed .num { color: var(--grey-mid); }
+
+.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-overlay {
+  font-family: inherit;
+  font-size: 14px; font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 100px;
+  border: 1px solid var(--grey-soft);
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-overlay:hover { border-color: var(--grey-mid); }
+.btn-overlay.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white; font-weight: 600;
+}
+.btn-overlay.primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 86px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.22s ease;
+  z-index: 90;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.miss { background: var(--amber-deep); }
+
+/* ============ HIDDEN YOUTUBE ============ */
+#yt-frame {
+  position: fixed;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  top: -100px; left: -100px;
+}
+
+/* ============ MOBILE ADJUSTMENTS ============ */
+@media (max-width: 760px) {
+  .bussola-page { padding: 10px 14px; gap: 8px; }
+  .episode-title { font-size: 18px; }
+  .episode-counter { font-size: 12px; }
+  .compass {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    max-height: none;
+    gap: 8px;
+  }
+  .compass-card[data-dir="N"],
+  .compass-card[data-dir="W"],
+  .compass-card[data-dir="E"],
+  .compass-card[data-dir="S"] {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 60px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+  }
+  .compass-center {
+    grid-column: 1;
+    grid-row: auto;
+    display: none;
+  }
+  .feedback-band { min-height: 48px; padding: 10px 12px; font-size: 13.5px; }
+  .compass-wrap { padding: 0; }
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-row1">Cinque Chiavi per <span class="accent">Rodari</span></div>
+      <div class="brand-row2">La macchina per fare i compiti · La Bussola</div>
+    </div>
+    <nav class="chiavi-nav" aria-label="Cinque chiavi">
+      <a class="chiave" data-level="1" data-url="index.html" title="Livello 1 — La Lente">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="13" cy="13" r="7.5"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
+        </svg>
+        <span class="chiave-num">L1</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
+      </a>
+      <button class="chiave active" data-level="2" title="Livello 2 — La Bussola">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="16" cy="16" r="11"/>
+          <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="16" r="1.6" fill="white"/>
+        </svg>
+        <span class="chiave-num">L2</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
+      </button>
+      <a class="chiave" data-level="3" data-url="specchio.html" title="Livello 3 — Lo Specchio">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="16" cy="16" rx="9" ry="11"/>
+          <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="chiave-num">L3</span>
+      </a>
+      <button class="chiave disabled" data-level="4" disabled title="Il Ponte — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 22 Q 16 8, 28 22"/>
+          <line x1="4" y1="22" x2="28" y2="22"/>
+          <line x1="11" y1="22" x2="11" y2="16"/>
+          <line x1="16" y1="22" x2="16" y2="13"/>
+          <line x1="21" y1="22" x2="21" y2="16"/>
+        </svg>
+        <span class="chiave-num">L4</span>
+      </button>
+      <button class="chiave disabled" data-level="5" disabled title="Il Taccuino — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="7" y="5" width="18" height="22" rx="1"/>
+          <line x1="11" y1="11" x2="21" y2="11"/>
+          <line x1="11" y1="15" x2="21" y2="15"/>
+          <line x1="11" y1="19" x2="18" y2="19"/>
+        </svg>
+        <span class="chiave-num">L5</span>
+      </button>
+    </nav>
+    <div class="right-block">
+      <div class="progress-pill" title="Episodi attraversati">
+        <span id="progress-text">0/5</span>
+        <span class="progress-dots" id="progress-dots"></span>
+      </div>
+      <button class="icon-btn" id="btn-restart-top" title="Ricomincia">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7.5a5.5 5.5 0 1 1 1.6 3.9"/>
+          <polyline points="2 4 2 7.5 5.5 7.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="bussola-page">
+    <div class="episode-header">
+      <span class="episode-counter" id="ep-counter">Episodio 1 di 5</span>
+      <h1 class="episode-title" id="ep-title">L'arrivo dell'ometto</h1>
+    </div>
+    <p class="episode-prompt" id="ep-prompt">Ascolta il frammento, poi scegli la direzione che secondo te punta al cuore di questo episodio.</p>
+
+    <button class="replay-btn" id="replay-btn">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 4 L12 8 L6 12 Z"/></svg>
+      <span id="replay-label">Ascolta il frammento</span>
+    </button>
+
+    <div class="compass-wrap">
+      <div class="compass" id="compass">
+        <div class="compass-card" data-dir="N"><span class="dir-label">N</span><span class="card-text"></span></div>
+        <div class="compass-card" data-dir="W"><span class="dir-label">O</span><span class="card-text"></span></div>
+        <div class="compass-center">
+          <div class="compass-medallion">
+            <svg class="medallion-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="32" cy="32" r="22"/>
+              <polygon points="32,14 38,32 32,50 26,32" fill="currentColor" stroke="none"/>
+              <circle cx="32" cy="32" r="2.5" fill="white"/>
+            </svg>
+            <div class="medallion-attempts" id="medallion-attempts">Trova il senso</div>
+            <div class="medallion-chance-dots" id="medallion-chance-dots">
+              <span class="cdot"></span><span class="cdot"></span><span class="cdot"></span>
+            </div>
+          </div>
+        </div>
+        <div class="compass-card" data-dir="E"><span class="dir-label">E</span><span class="card-text"></span></div>
+        <div class="compass-card" data-dir="S"><span class="dir-label">S</span><span class="card-text"></span></div>
+      </div>
+    </div>
+
+    <div class="feedback-band empty" id="feedback-band">
+      <span class="feedback-text" id="feedback-text">Scegli una direzione per ricevere il primo orientamento.</span>
+    </div>
+
+    <button class="fab-finish" id="btn-finish">
+      <span>Concludi la Bussola</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="8" x2="13" y2="8"/>
+        <polyline points="9,4 13,8 9,12"/>
+      </svg>
+    </button>
+  </main>
+
+  <div class="audio-bar">
+    <button class="play-btn" id="play-btn" aria-label="Avvia o ferma il frammento">
+      <svg id="play-icon" viewBox="0 0 14 14"><polygon points="3,2 12,7 3,12"/></svg>
+    </button>
+    <div class="audio-info">
+      <span class="frag-label" id="frag-label">Frammento episodio</span>
+      <div class="audio-progress"><div class="audio-progress-fill" id="audio-fill"></div></div>
+      <span class="frag-time" id="frag-time">0:00 / 0:00</span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="finish-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
+      <circle cx="24" cy="24" r="16"/>
+      <polygon points="24,11 28,24 24,37 20,24" fill="currentColor" stroke="none"/>
+      <circle cx="24" cy="24" r="2.4" fill="white"/>
+    </svg>
+    <h2 id="finish-title">Hai attraversato la Bussola</h2>
+    <p class="body" id="finish-body">Hai trovato l'orientamento dentro la favola.</p>
+    <div class="modal-stats">
+      <div class="modal-stat alone"><span class="num" id="m-alone">0</span><span class="lbl">Al primo colpo</span></div>
+      <div class="modal-stat helped"><span class="num" id="m-helped">0</span><span class="lbl">Con prove</span></div>
+      <div class="modal-stat missed"><span class="num" id="m-missed">0</span><span class="lbl">Rivelate</span></div>
+    </div>
+    <div class="overlay-actions">
+      <button class="btn-overlay" id="finish-back">Torna alla bussola</button>
+      <button class="btn-overlay" id="finish-restart">Ricomincia</button>
+      <button class="btn-overlay primary" id="finish-next">
+        Prossima chiave
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: -2px;">
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <polyline points="9,4 13,8 9,12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="yt-frame"></div>
+
+<script>
+/* ============================================================
+   LA BUSSOLA — Cinque Chiavi per Rodari, Chiave 2
+   Single-file HTML, vanilla JS, YouTube IFrame API
+   ============================================================ */
+
+const VIDEO_ID = 'LhK_Kme3IFk';
+const MAX_ATTEMPTS = 3;
+const LEVEL = 2;
+
+const CHIAVI_INFO = {
+  1: { name: 'La Lente',    url: 'index.html' },
+  2: { name: 'La Bussola',  url: '' },
+  3: { name: 'Lo Specchio', url: 'specchio.html' },
+  4: { name: 'Il Ponte',    url: '' },
+  5: { name: 'Il Taccuino', url: '' }
+};
+
+/* ----------- EPISODI ----------- */
+/* Per ogni episodio: l'audio è il frammento del video originale.
+   "center" è la direzione (N/E/S/O) che coglie il senso centrale.
+   Le altre 3 dicono cose vere ma laterali. */
+const EPISODES = [
+  {
+    title: "L'arrivo dell'ometto",
+    audioStart: 4.5, audioEnd: 13.5,
+    center: 'E',
+    cards: {
+      N: {
+        text: "Un ometto buffo e bizzarro arriva alla porta.",
+        feedback: "È vero — l'ometto è un personaggio strano. Ma stai descrivendo come <em>appare</em>, non cosa <em>porta</em>. Guarda meglio: cosa entra in casa insieme a lui?"
+      },
+      E: {
+        text: "Qualcuno entra in casa portando qualcosa che il bambino non si aspetta.",
+        feedback: "Sì. La favola non comincia davvero quando bussa la porta, ma quando entra <em>un'offerta</em>. Qualcosa di grande, dentro una borsa più grande dell'ometto stesso. Siamo all'inizio di una proposta."
+      },
+      S: {
+        text: "Bussano sempre in modo strano i personaggi delle favole.",
+        feedback: "È vero in generale, ma è un'osservazione sul <em>tipo</em> di storia, non su <em>questa</em> storia. Cosa accade qui in particolare?"
+      },
+      W: {
+        text: "L'omino ha una borsa più grande di lui.",
+        feedback: "Vero — il dettaglio della borsa è importante. Ma è un indizio: cosa ti suggerisce di guardare? Pensa a cosa potrebbe contenere."
+      }
+    }
+  },
+  {
+    title: "L'offerta della macchina",
+    audioStart: 14, audioEnd: 36,
+    center: 'N',
+    cards: {
+      N: {
+        text: "Viene proposta una macchina che fa tutti i compiti al posto del bambino.",
+        feedback: "Sì. Questo è il cuore della scena: una <em>scorciatoia</em>. Bottoncini colorati per problemi, temi, geografia — un minuto e tutto è fatto. La macchina toglie la fatica. È un'offerta che pesa, perché tocca qualcosa che riguarda davvero il bambino."
+      },
+      E: {
+        text: "L'omino è un venditore di oggetti moderni.",
+        feedback: "Sei vicino — è un venditore. Ma il punto non è <em>chi è</em>, è <em>cosa offre</em>. Cosa fa esattamente la sua macchina?"
+      },
+      S: {
+        text: "I bottoncini colorati rendono tutto più divertente.",
+        feedback: "Stai guardando i colori — rosso, giallo, verde. Ma sono dettagli di superficie. Cosa succede quando si schiaccia un bottoncino? Che cosa fa la macchina?"
+      },
+      W: {
+        text: "La macchina è velocissima: un minuto e ha finito.",
+        feedback: "La velocità è il dettaglio che colpisce — ma è una <em>qualità</em> della macchina. La domanda vera è: che cosa <em>fa</em> in quel minuto, e a chi è destinata?"
+      }
+    }
+  },
+  {
+    title: "Il prezzo: il cervello",
+    audioStart: 36.5, audioEnd: 77.5,
+    center: 'S',
+    cards: {
+      N: {
+        text: "L'omino non vuole soldi ma uno scambio strano.",
+        feedback: "Vero — l'omino rifiuta i denari. Ma stai descrivendo <em>cosa accade</em>, non cosa significa. Cosa chiede l'omino al posto dei soldi, e perché conta?"
+      },
+      E: {
+        text: "Il babbo è un genitore poco attento ad accettare.",
+        feedback: "È una lettura possibile, ma giudica un personaggio invece di guardare la scena. Il punto non è se il babbo abbia ragione o torto — è cosa viene messo sul tavolo dello scambio."
+      },
+      S: {
+        text: "Per ottenere la macchina, il bambino deve rinunciare a ciò che gli serve per pensare.",
+        feedback: "Sì. Qui sta tutto il senso dell'episodio. La scorciatoia ha un prezzo, e il prezzo non è denaro — è il <em>cervello</em>. Rodari ci sta dicendo che ogni scorciatoia chiede in cambio qualcosa che riguarda chi siamo."
+      },
+      W: {
+        text: "Il bambino insiste molto per avere la macchina.",
+        feedback: "Vero — il bambino la vuole. Ma il suo desiderio è la <em>reazione</em>, non il cuore della scena. Cosa l'omino propone in cambio?"
+      }
+    }
+  },
+  {
+    title: "Leggerezza e gabbia",
+    audioStart: 78, audioEnd: 124,
+    center: 'W',
+    cards: {
+      N: {
+        text: "Il bambino diventa leggerissimo e quasi vola via.",
+        feedback: "Vero — la leggerezza c'è. Ma è solo metà della scena. Cosa <em>succede</em> a quel bambino diventato leggero? Dove finisce?"
+      },
+      E: {
+        text: "L'omino spiega che senza cervello si muore di fame nei boschi.",
+        feedback: "È un dettaglio importante della spiegazione, ma è la <em>giustificazione</em> dell'omino. Il fatto centrale è cosa accade <em>davvero</em> al bambino — non cosa l'omino dice."
+      },
+      S: {
+        text: "Gli uccellini in gabbia non sono felici nelle storie.",
+        feedback: "Cogli l'immagine — la gabbia, l'uccellino — ma ti fermi al paragone. Rodari non sta parlando in generale degli uccellini: sta dicendo qualcosa di preciso su <em>questo</em> bambino."
+      },
+      W: {
+        text: "Senza il cervello, il bambino non è più libero: dev'essere chiuso in una gabbia.",
+        feedback: "Sì. Qui sta il rovesciamento di Rodari: la leggerezza sembrava libertà, ma diventa prigionia. Senza pensiero non si vola — si <em>deve</em> essere rinchiusi. La gabbia stretta, le stecche che stringono. È un incubo, e ha una direzione precisa."
+      }
+    }
+  },
+  {
+    title: "Il risveglio",
+    audioStart: 124.5, audioEnd: 133,
+    center: 'E',
+    cards: {
+      N: {
+        text: "Per fortuna era solo un brutto sogno.",
+        feedback: "È vero, è un sogno — ma è la <em>cornice</em>. Cosa fa il bambino subito dopo essersi svegliato? Quel gesto è il finale vero."
+      },
+      E: {
+        text: "Dopo l'incubo, il bambino corre a fare i compiti — ora sa perché ci servono.",
+        feedback: "Sì. Il finale non è il sollievo di essersi svegliato — è la <em>scelta</em> che il bambino fa dopo. I compiti diventano il modo per <em>tenersi il cervello</em>, per non finire in gabbia. La fatica non è più una punizione: è ciò che ci tiene liberi."
+      },
+      S: {
+        text: "I bambini buoni fanno i compiti quando i genitori dicono di farli.",
+        feedback: "È una lettura moralistica, ma non è quella di Rodari. Il bambino non corre a fare i compiti per <em>obbedienza</em>. Cosa lo spinge davvero, dopo quello che ha visto?"
+      },
+      W: {
+        text: "Anche gli incubi possono insegnare qualcosa.",
+        feedback: "È vero in generale, ma è una morale astratta. Il finale di Rodari è più preciso: il bambino fa <em>una cosa specifica</em>. Quale, e perché proprio quella?"
+      }
+    }
+  }
+];
+
+const DIR_NAMES = { N: 'Nord', E: 'Est', S: 'Sud', W: 'Ovest' };
+
+/* ----------- STATE ----------- */
+const state = {
+  player: null,
+  playerReady: false,
+  isPlaying: false,
+  currentEpisode: 0,
+  episodes: EPISODES.map(() => ({
+    attempts: 0,
+    status: 'empty',    // empty | solved | helped | exhausted
+    wrongDirs: new Set()
+  })),
+  audioMonitor: null
+};
+
+/* ----------- HELPERS ----------- */
+function formatTime(s) {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function showToast(message, options) {
+  options = options || {};
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = 'toast show' + (options.miss ? ' miss' : '');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    t.className = 'toast';
+  }, options.duration || 2000);
+}
+
+/* ----------- PROGRESS (in-session only, no persistence) -----------
+   Nessuna memoria tra accessi: ogni page load parte da zero.
+   La spunta verde sulla chiave corrente appare solo a fine attività
+   e vive esclusivamente dentro la sessione del browser. */
+
+function markLevelCompleted(level) {
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) {
+    const wasCompleted = btn.classList.contains('completed');
+    btn.classList.add('completed');
+    if (!wasCompleted) {
+      btn.classList.add('celebrating');
+      setTimeout(() => btn.classList.remove('celebrating'), 800);
+    }
+  }
+}
+
+/* ----------- YOUTUBE PLAYER ----------- */
+function loadYouTubeAPI() {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  state.player = new YT.Player('yt-frame', {
+    height: '1', width: '1', videoId: VIDEO_ID,
+    playerVars: { controls: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1 },
+    events: {
+      onReady: () => {
+        state.playerReady = true;
+        updateAudioInfo();
+      },
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.PLAYING) {
+          state.isPlaying = true;
+          updatePlayIcon();
+          startAudioMonitor();
+        } else {
+          state.isPlaying = false;
+          updatePlayIcon();
+          stopAudioMonitor();
+          updateAudioInfo();
+        }
+      }
+    }
+  });
+};
+
+function startAudioMonitor() {
+  stopAudioMonitor();
+  state.audioMonitor = setInterval(() => {
+    if (!state.playerReady) return;
+    const t = state.player.getCurrentTime();
+    const ep = EPISODES[state.currentEpisode];
+    updateAudioInfo(t);
+    // Stop at episode end
+    if (t >= ep.audioEnd - 0.05) {
+      state.player.pauseVideo();
+    }
+  }, 120);
+}
+
+function stopAudioMonitor() {
+  if (state.audioMonitor) {
+    clearInterval(state.audioMonitor);
+    state.audioMonitor = null;
+  }
+}
+
+function updatePlayIcon() {
+  const ic = document.getElementById('play-icon');
+  if (state.isPlaying) {
+    ic.innerHTML = '<rect x="3" y="2" width="3" height="10"/><rect x="8" y="2" width="3" height="10"/>';
+  } else {
+    ic.innerHTML = '<polygon points="3,2 12,7 3,12"/>';
+  }
+  const r = document.getElementById('replay-btn');
+  if (state.isPlaying) {
+    r.classList.add('playing');
+    document.getElementById('replay-label').textContent = 'Frammento in ascolto…';
+  } else {
+    r.classList.remove('playing');
+    document.getElementById('replay-label').textContent = 'Ascolta il frammento';
+  }
+}
+
+function updateAudioInfo(currentT) {
+  const ep = EPISODES[state.currentEpisode];
+  const duration = ep.audioEnd - ep.audioStart;
+  const t = typeof currentT === 'number'
+    ? Math.max(0, Math.min(duration, currentT - ep.audioStart))
+    : 0;
+  document.getElementById('frag-time').textContent = `${formatTime(t)} / ${formatTime(duration)}`;
+  document.getElementById('frag-label').textContent = `Frammento · ${ep.title}`;
+  const pct = duration > 0 ? (t / duration) * 100 : 0;
+  document.getElementById('audio-fill').style.width = pct + '%';
+}
+
+function playFragment() {
+  if (!state.playerReady) {
+    showToast('Audio non ancora pronto, riprova.', { duration: 1800 });
+    return;
+  }
+  const ep = EPISODES[state.currentEpisode];
+  state.player.seekTo(ep.audioStart, true);
+  state.player.playVideo();
+}
+
+function togglePlay() {
+  if (!state.playerReady) return;
+  if (state.isPlaying) {
+    state.player.pauseVideo();
+  } else {
+    playFragment();
+  }
+}
+
+/* ----------- EPISODE RENDERING ----------- */
+function loadEpisode(idx) {
+  if (idx < 0 || idx >= EPISODES.length) return;
+  state.currentEpisode = idx;
+  const ep = EPISODES[idx];
+  const epState = state.episodes[idx];
+
+  document.getElementById('ep-counter').textContent = `Episodio ${idx + 1} di ${EPISODES.length}`;
+  document.getElementById('ep-title').textContent = ep.title;
+  document.getElementById('ep-prompt').textContent =
+    'Ascolta il frammento, poi scegli la direzione che secondo te punta al cuore di questo episodio.';
+
+  // Render the 4 cards in their fixed positions
+  document.querySelectorAll('.compass-card').forEach(card => {
+    const dir = card.dataset.dir;
+    const data = ep.cards[dir];
+    card.querySelector('.card-text').innerHTML = data.text;
+    card.className = 'compass-card';
+    card.dataset.dir = dir;
+
+    // Reapply state-based classes
+    if (epState.status === 'solved' && dir === ep.center) {
+      card.classList.add('solved');
+    } else if (epState.status === 'helped' && dir === ep.center) {
+      card.classList.add('helped');
+    } else if (epState.status === 'exhausted') {
+      if (dir === ep.center) {
+        card.classList.add('exhausted', 'was-correct');
+      } else {
+        card.classList.add('exhausted');
+      }
+    } else if (epState.wrongDirs.has(dir)) {
+      card.classList.add('wrong');
+    }
+  });
+
+  // Chance dots in the medallion
+  const dots = document.querySelectorAll('#medallion-chance-dots .cdot');
+  dots.forEach((d, i) => {
+    d.classList.toggle('used', i < epState.attempts);
+  });
+
+  // Medallion label
+  const mlbl = document.getElementById('medallion-attempts');
+  if (epState.status === 'solved') {
+    mlbl.textContent = 'Senso trovato';
+  } else if (epState.status === 'helped') {
+    mlbl.textContent = 'Senso trovato';
+  } else if (epState.status === 'exhausted') {
+    mlbl.textContent = 'Direzione rivelata';
+  } else {
+    mlbl.textContent = 'Trova il senso';
+  }
+
+  // Feedback band
+  renderFeedbackForState(idx);
+
+  // Update progress dots
+  updateProgress();
+
+  // Audio info refresh
+  updateAudioInfo();
+
+  // Auto-play the fragment when entering an unsolved episode
+  if (epState.status === 'empty' && state.playerReady) {
+    setTimeout(() => playFragment(), 200);
+  }
+}
+
+function renderFeedbackForState(idx) {
+  const ep = EPISODES[idx];
+  const epState = state.episodes[idx];
+  const band = document.getElementById('feedback-band');
+  const txt = document.getElementById('feedback-text');
+
+  // Reset
+  band.className = 'feedback-band';
+  // Remove any existing button
+  const existingBtn = band.querySelector('.feedback-next-btn');
+  if (existingBtn) existingBtn.remove();
+
+  if (epState.status === 'solved' || epState.status === 'helped') {
+    band.classList.add('solved');
+    txt.innerHTML = ep.cards[ep.center].feedback;
+    appendNextBtn(band, idx);
+  } else if (epState.status === 'exhausted') {
+    band.classList.add('exhausted');
+    txt.innerHTML = `La direzione era <strong>${DIR_NAMES[ep.center]}</strong>. ` + ep.cards[ep.center].feedback;
+    appendNextBtn(band, idx);
+  } else if (epState.attempts > 0) {
+    // Show last wrong feedback
+    band.classList.add('wrong');
+    const lastWrong = Array.from(epState.wrongDirs).pop();
+    txt.innerHTML = ep.cards[lastWrong].feedback;
+  } else {
+    band.classList.add('empty');
+    txt.innerHTML = 'Scegli una direzione per ricevere il primo orientamento.';
+  }
+}
+
+function appendNextBtn(band, idx) {
+  const btn = document.createElement('button');
+  btn.className = 'feedback-next-btn';
+  const isLast = idx === EPISODES.length - 1;
+  btn.innerHTML = isLast
+    ? `<span>Concludi la Bussola</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,8 7,12 13,4"/></svg>`
+    : `<span>Prossimo episodio</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/></svg>`;
+  btn.addEventListener('click', () => {
+    if (isLast) {
+      tryFinish();
+    } else {
+      loadEpisode(idx + 1);
+    }
+  });
+  band.appendChild(btn);
+}
+
+/* ----------- COMPASS INTERACTION ----------- */
+function onCardClick(dir) {
+  const idx = state.currentEpisode;
+  const ep = EPISODES[idx];
+  const epState = state.episodes[idx];
+
+  // Episode already concluded? Ignore.
+  if (epState.status !== 'empty') return;
+  // Already tried this direction? Ignore.
+  if (epState.wrongDirs.has(dir)) return;
+
+  const card = document.querySelector(`.compass-card[data-dir="${dir}"]`);
+
+  if (dir === ep.center) {
+    // Correct!
+    if (epState.attempts === 0) {
+      epState.status = 'solved';
+      card.classList.add('solved');
+    } else {
+      epState.status = 'helped';
+      card.classList.add('helped');
+    }
+    renderFeedbackForState(idx);
+    document.getElementById('medallion-attempts').textContent = 'Senso trovato';
+    updateProgress();
+    checkAllDone();
+  } else {
+    // Wrong direction
+    epState.wrongDirs.add(dir);
+    epState.attempts += 1;
+    card.classList.add('wrong');
+    // shake animation re-trigger
+    void card.offsetWidth;
+
+    // Update chance dots
+    const dots = document.querySelectorAll('#medallion-chance-dots .cdot');
+    if (dots[epState.attempts - 1]) dots[epState.attempts - 1].classList.add('used');
+
+    if (epState.attempts >= MAX_ATTEMPTS) {
+      // Reveal
+      setTimeout(() => {
+        epState.status = 'exhausted';
+        const correctCard = document.querySelector(`.compass-card[data-dir="${ep.center}"]`);
+        // Mark all cards as exhausted
+        document.querySelectorAll('.compass-card').forEach(c => {
+          c.classList.remove('wrong');
+          c.classList.add('exhausted');
+          if (c.dataset.dir === ep.center) c.classList.add('was-correct');
+        });
+        document.getElementById('medallion-attempts').textContent = 'Direzione rivelata';
+        renderFeedbackForState(idx);
+        updateProgress();
+        checkAllDone();
+      }, 600);
+    } else {
+      // Show feedback for this wrong direction
+      renderFeedbackForState(idx);
+      const remaining = MAX_ATTEMPTS - epState.attempts;
+      showToast(
+        remaining === 1
+          ? 'Un\'ultima direzione da provare.'
+          : `Riprova: hai ${remaining} altre prove.`,
+        { miss: true, duration: 2000 }
+      );
+    }
+  }
+}
+
+/* ----------- PROGRESS DOTS ----------- */
+function updateProgress() {
+  const container = document.getElementById('progress-dots');
+  container.innerHTML = '';
+  state.episodes.forEach(ep => {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    if (ep.status === 'solved') dot.classList.add('solved');
+    else if (ep.status === 'helped') dot.classList.add('helped');
+    else if (ep.status === 'exhausted') dot.classList.add('exhausted');
+    container.appendChild(dot);
+  });
+  const done = state.episodes.filter(e => e.status !== 'empty').length;
+  document.getElementById('progress-text').textContent = `${done}/${EPISODES.length}`;
+}
+
+function checkAllDone() {
+  const allDone = state.episodes.every(e => e.status !== 'empty');
+  document.getElementById('btn-finish').classList.toggle('visible', allDone);
+}
+
+/* ----------- FINISH OVERLAY ----------- */
+function tryFinish() {
+  const allDone = state.episodes.every(e => e.status !== 'empty');
+  if (!allDone) {
+    const remaining = state.episodes.filter(e => e.status === 'empty').length;
+    showToast(`Ti restano ${remaining} episodi da attraversare.`, { miss: true, duration: 2200 });
+    return;
+  }
+  showFinishOverlay();
+}
+
+function showFinishOverlay() {
+  const alone = state.episodes.filter(e => e.status === 'solved').length;
+  const helped = state.episodes.filter(e => e.status === 'helped').length;
+  const missed = state.episodes.filter(e => e.status === 'exhausted').length;
+
+  document.getElementById('m-alone').textContent = alone;
+  document.getElementById('m-helped').textContent = helped;
+  document.getElementById('m-missed').textContent = missed;
+
+  let title, body;
+  const total = EPISODES.length;
+  if (alone === total) {
+    title = 'Hai attraversato la Bussola da solo';
+    body = `Tutti e ${total} gli episodi colti al primo colpo. Hai un orecchio fine per il senso: la favola ti parla in chiaro.`;
+  } else if (missed === 0) {
+    title = 'Hai attraversato la Bussola';
+    body = `Tutti gli episodi orientati. ${alone} al primo colpo, ${helped} dopo qualche prova. Cercare la direzione giusta è già parte del leggere.`;
+  } else if (alone + helped > missed) {
+    title = 'Hai attraversato la Bussola';
+    body = `${alone} senso colto al volo, ${helped} con qualche prova, ${missed} rivelati dall'app. Le direzioni che non hai visto da solo, ora le conosci: sono parte di quello che la favola ti lascia in mano.`;
+  } else {
+    title = 'Hai attraversato la Bussola';
+    body = `Molte direzioni sono state rivelate — fa niente, succede. Adesso però sai quali erano: rileggi la favola con questo orientamento e ti suonerà diversa.`;
+  }
+
+  document.getElementById('finish-title').textContent = title;
+  document.getElementById('finish-body').innerHTML = body;
+
+  // Visibilità del bottone "Prossima chiave": solo se Lo Specchio è configurato e disponibile
+  const nextBtn = document.getElementById('finish-next');
+  const nextLvl = LEVEL + 1;
+  const nextChiave = document.querySelector(`.chiave[data-level="${nextLvl}"]`);
+  const nextUrl = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  const canGoNext = nextChiave && !nextChiave.classList.contains('disabled') && nextUrl;
+  nextBtn.style.display = canGoNext ? '' : 'none';
+
+  document.getElementById('finish-overlay').classList.add('open');
+  markLevelCompleted(LEVEL);
+}
+
+function closeFinishOverlay() {
+  document.getElementById('finish-overlay').classList.remove('open');
+}
+
+function goToNextChiave() {
+  const nextLvl = LEVEL + 1;
+  const url = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  if (url) {
+    closeFinishOverlay();
+    window.location.href = url;
+  }
+}
+
+function restartLevel() {
+  if (!confirm('Vuoi ricominciare la Bussola? Tutti gli orientamenti trovati verranno azzerati.')) return;
+  state.episodes = EPISODES.map(() => ({
+    attempts: 0, status: 'empty', wrongDirs: new Set()
+  }));
+  state.currentEpisode = 0;
+  document.getElementById('btn-finish').classList.remove('visible');
+  closeFinishOverlay();
+  loadEpisode(0);
+  updateProgress();
+  if (state.player && state.playerReady) {
+    state.player.pauseVideo();
+  }
+}
+
+/* ----------- CHIAVE NAVIGATION ----------- */
+function onChiaveClick(btn) {
+  const lvl = parseInt(btn.dataset.level, 10);
+  if (lvl === LEVEL) return; // current — do nothing
+  if (btn.classList.contains('disabled')) {
+    showToast(`${CHIAVI_INFO[lvl].name} sarà disponibile presto`);
+    return;
+  }
+  const url = btn.dataset.url || CHIAVI_INFO[lvl].url;
+  if (url) {
+    window.location.href = url;
+  } else {
+    showToast(`${CHIAVI_INFO[lvl].name} non è ancora collegata`, { duration: 2000 });
+  }
+}
+
+/* ----------- INIT ----------- */
+document.addEventListener('DOMContentLoaded', () => {
+  loadYouTubeAPI();
+  loadEpisode(0);
+  updateProgress();
+
+  document.getElementById('play-btn').addEventListener('click', togglePlay);
+  document.getElementById('replay-btn').addEventListener('click', () => {
+    if (state.isPlaying) {
+      state.player.pauseVideo();
+    } else {
+      playFragment();
+    }
+  });
+  document.getElementById('btn-finish').addEventListener('click', tryFinish);
+  document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
+
+  // Compass card click handlers
+  document.querySelectorAll('.compass-card').forEach(card => {
+    card.addEventListener('click', () => onCardClick(card.dataset.dir));
+  });
+
+  // Chiavi navigation
+  document.querySelectorAll('.chiave').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      onChiaveClick(btn);
+    });
+  });
+
+  // Overlay buttons
+  document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
+  document.getElementById('finish-restart').addEventListener('click', restartLevel);
+  document.getElementById('finish-next').addEventListener('click', goToNextChiave);
+
+  // Spacebar = play/pause
+  document.addEventListener('keydown', e => {
+    if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinque Chiavi per Rodari — Lo Specchio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1B6D3F;
+  --green-light: #2D8659;
+  --green-soft: #E8F1EC;
+  --green-deep: #134A2B;
+  --amber: #C4801A;
+  --amber-soft: #FBF1E0;
+  --amber-deep: #9C6515;
+  --blue: #2C5F8D;
+  --blue-soft: #E4ECF4;
+  --grey-deep: #5A5953;
+  --grey-mid: #8C8B85;
+  --grey-soft: #E5E1D6;
+  --grey-bg: #F5F2E9;
+  --bg: #FAF8F3;
+  --ink: #2A2A2A;
+  --ink-soft: #4A4A48;
+  --topbar-h: 72px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+button { font-family: inherit; }
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ============ TOPBAR ============ */
+.topbar {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 50;
+  position: sticky; top: 0;
+}
+
+.brand { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-row1 {
+  font-family: 'Lora', serif;
+  font-weight: 600; font-size: 17px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+.brand-row1 .accent { color: var(--amber); font-style: italic; font-weight: 500; }
+.brand-row2 {
+  font-size: 11px; color: var(--grey-mid);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.chiavi-nav { display: flex; justify-content: center; align-items: center; gap: 6px; }
+
+.chiave {
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--grey-mid);
+  min-width: 56px;
+  position: relative;
+  text-decoration: none;
+}
+.chiave:hover:not(.disabled):not(.active) { background: var(--grey-bg); }
+.chiave.active {
+  background: var(--green-soft);
+  border-color: var(--green-light);
+  color: var(--green-deep);
+  cursor: default;
+}
+.chiave.disabled { cursor: not-allowed; opacity: 0.45; }
+.chiave-icon { width: 22px; height: 22px; }
+.chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave-done {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: none;
+  align-items: center; justify-content: center;
+}
+.chiave-done svg { width: 8px; height: 8px; color: white; }
+.chiave.completed .chiave-done { display: flex; }
+.chiave.completed:not(.active) {
+  color: var(--green-deep);
+  opacity: 1;
+}
+@keyframes chiave-celebra {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  70%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+.chiave.celebrating .chiave-done { animation: chiave-celebra 0.7s ease-out; }
+
+.right-block { display: flex; align-items: center; gap: 12px; }
+
+.progress-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: var(--grey-bg);
+  border-radius: 100px;
+  font-size: 13px;
+  color: var(--grey-deep);
+  font-weight: 500;
+}
+.progress-dots { display: inline-flex; gap: 4px; }
+.progress-dots .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--grey-soft);
+  transition: background 0.2s;
+}
+.progress-dots .dot.fatica { background: var(--green-light); }
+.progress-dots .dot.macchina { background: var(--amber); }
+.progress-dots .dot.trattativa { background: var(--blue); }
+
+.icon-btn {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-deep);
+  transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--grey-mid); background: var(--grey-bg); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .topbar { padding: 0 12px; gap: 12px; }
+  .brand-row1 { font-size: 14px; }
+  .brand-row2 { font-size: 10px; }
+  .chiave { min-width: 40px; padding: 4px 6px; }
+  .chiave-num { display: none; }
+  .chiave-icon { width: 20px; height: 20px; }
+  .progress-pill { display: none; }
+}
+
+/* ============ MAIN ============ */
+.specchio-page {
+  flex: 1;
+  padding: 32px 24px 80px;
+  max-width: 920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.situation-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.situation-counter {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.situation-title {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 24px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.situation-scene {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 22px;
+  font-family: 'Lora', serif;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.situation-prompt {
+  margin-top: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--grey-deep);
+  font-style: normal;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.situation-prompt svg {
+  width: 14px; height: 14px;
+  color: var(--amber);
+  flex-shrink: 0;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.choice-card {
+  background: white;
+  border: 1.5px solid var(--grey-soft);
+  border-radius: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  text-align: left;
+  font-family: 'Lora', serif;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  user-select: none;
+}
+.choice-card:hover:not(.locked) {
+  border-color: var(--green-light);
+  background: #FCFCF8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(27, 109, 63, 0.06);
+}
+.choice-letter {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--grey-bg);
+  color: var(--grey-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600; font-size: 14px;
+  transition: all 0.18s;
+}
+.choice-card:hover:not(.locked) .choice-letter {
+  background: var(--green-soft);
+  color: var(--green-deep);
+}
+.choice-text { flex: 1; padding-top: 3px; }
+.choice-card.selected {
+  border-color: var(--green-light);
+  background: var(--green-soft);
+}
+.choice-card.selected .choice-letter {
+  background: var(--green);
+  color: white;
+}
+.choice-card.locked { cursor: default; opacity: 0.55; }
+.choice-card.locked.selected { opacity: 1; }
+.choice-card.locked:hover { transform: none; box-shadow: none; }
+
+/* ============ MIRROR (specchio narrativo) ============ */
+.mirror {
+  margin-top: 28px;
+  padding: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.35s ease;
+  pointer-events: none;
+}
+.mirror.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.mirror-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  color: var(--grey-mid);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.mirror-divider::before, .mirror-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--grey-soft);
+}
+.mirror-divider svg { width: 14px; height: 14px; opacity: 0.6; }
+
+.mirror-content {
+  background: white;
+  border-left: 3px solid var(--amber);
+  border-radius: 0 12px 12px 0;
+  padding: 20px 24px 22px;
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.mirror-content strong, .mirror-content em { font-weight: 500; }
+.mirror-content em { color: var(--amber-deep); font-style: italic; }
+
+.mirror-next {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+}
+.mirror-next-btn {
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+.mirror-next-btn:hover { background: var(--green-deep); }
+.mirror-next-btn svg { width: 14px; height: 14px; }
+
+/* ============ OVERLAY ============ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 42, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  padding: 24px;
+}
+.overlay.open { opacity: 1; pointer-events: auto; }
+.overlay-card {
+  background: white;
+  border-radius: 18px;
+  padding: 32px 36px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+.overlay-card h2 {
+  margin: 0 0 8px;
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 26px;
+  color: var(--green-deep);
+  letter-spacing: -0.01em;
+}
+.overlay-card .body {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+  line-height: 1.6;
+}
+.icon-large { width: 56px; height: 56px; margin: 0 auto 12px; display: block; }
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+.profile-stat {
+  background: var(--grey-bg);
+  border-radius: 12px;
+  padding: 14px 8px;
+}
+.profile-stat .num {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  font-feature-settings: 'tnum';
+  display: block;
+}
+.profile-stat .lbl {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--grey-mid);
+  margin-top: 4px; display: block;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.profile-stat.fatica .num    { color: var(--green-light); }
+.profile-stat.macchina .num  { color: var(--amber); }
+.profile-stat.trattativa .num { color: var(--blue); }
+
+.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-overlay {
+  font-family: inherit;
+  font-size: 14px; font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 100px;
+  border: 1px solid var(--grey-soft);
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-overlay:hover { border-color: var(--grey-mid); }
+.btn-overlay.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: white; font-weight: 600;
+}
+.btn-overlay.primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.22s ease;
+  z-index: 90;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 720px) {
+  .specchio-page { padding: 20px 14px 60px; }
+  .situation-title { font-size: 19px; }
+  .situation-scene { padding: 16px 18px; font-size: 15px; }
+  .choice-card { padding: 14px 16px; font-size: 14.5px; }
+  .mirror-content { padding: 16px 18px; font-size: 14.5px; }
+  .profile-stats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-row1">Cinque Chiavi per <span class="accent">Rodari</span></div>
+      <div class="brand-row2">La macchina per fare i compiti · Lo Specchio</div>
+    </div>
+    <nav class="chiavi-nav" aria-label="Cinque chiavi">
+      <a class="chiave" data-level="1" data-url="index.html" title="Livello 1 — La Lente">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="13" cy="13" r="7.5"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
+        </svg>
+        <span class="chiave-num">L1</span>
+      </a>
+      <a class="chiave" data-level="2" data-url="bussola.html" title="Livello 2 — La Bussola">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="16" cy="16" r="11"/>
+          <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="16" r="1.6" fill="white"/>
+        </svg>
+        <span class="chiave-num">L2</span>
+      </a>
+      <button class="chiave active" data-level="3" title="Livello 3 — Lo Specchio">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="16" cy="16" rx="9" ry="11"/>
+          <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="chiave-num">L3</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
+      </button>
+      <button class="chiave disabled" data-level="4" disabled title="Il Ponte — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 22 Q 16 8, 28 22"/>
+          <line x1="4" y1="22" x2="28" y2="22"/>
+          <line x1="11" y1="22" x2="11" y2="16"/>
+          <line x1="16" y1="22" x2="16" y2="13"/>
+          <line x1="21" y1="22" x2="21" y2="16"/>
+        </svg>
+        <span class="chiave-num">L4</span>
+      </button>
+      <button class="chiave disabled" data-level="5" disabled title="Il Taccuino — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="7" y="5" width="18" height="22" rx="1"/>
+          <line x1="11" y1="11" x2="21" y2="11"/>
+          <line x1="11" y1="15" x2="21" y2="15"/>
+          <line x1="11" y1="19" x2="18" y2="19"/>
+        </svg>
+        <span class="chiave-num">L5</span>
+      </button>
+    </nav>
+    <div class="right-block">
+      <div class="progress-pill" title="Specchiamenti">
+        <span id="progress-text">0/5</span>
+        <span class="progress-dots" id="progress-dots"></span>
+      </div>
+      <button class="icon-btn" id="btn-restart-top" title="Ricomincia">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7.5a5.5 5.5 0 1 1 1.6 3.9"/>
+          <polyline points="2 4 2 7.5 5.5 7.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="specchio-page">
+    <div class="situation-header">
+      <span class="situation-counter" id="sit-counter">Specchio 1 di 5</span>
+    </div>
+    <h1 class="situation-title" id="sit-title">Il tema di italiano</h1>
+    <div class="situation-scene">
+      <div id="sit-scene"></div>
+      <div class="situation-prompt">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="7" cy="7" r="5.5"/>
+          <line x1="7" y1="4" x2="7" y2="7.5"/>
+          <circle cx="7" cy="9.5" r="0.5" fill="currentColor"/>
+        </svg>
+        <span>Non c'è una risposta giusta. Scegli quella che ti sembra più vicina a quello che faresti davvero.</span>
+      </div>
+    </div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="mirror" id="mirror">
+      <div class="mirror-divider">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="12" cy="12" rx="7" ry="9"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke-dasharray="2 2"/>
+        </svg>
+        Specchio
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="12" cy="12" rx="7" ry="9"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <div class="mirror-content" id="mirror-content"></div>
+      <div class="mirror-next">
+        <button class="mirror-next-btn" id="mirror-next-btn">
+          <span id="mirror-next-label">Prossimo specchio</span>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="8" x2="13" y2="8"/>
+            <polyline points="9,4 13,8 9,12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="finish-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
+      <ellipse cx="24" cy="24" rx="14" ry="18"/>
+      <line x1="10" y1="24" x2="38" y2="24" stroke-dasharray="3 3"/>
+    </svg>
+    <h2 id="finish-title">Hai attraversato lo Specchio</h2>
+    <p class="body" id="finish-body"></p>
+    <div class="profile-stats">
+      <div class="profile-stat fatica"><span class="num" id="m-fatica">0</span><span class="lbl">Come dopo il risveglio</span></div>
+      <div class="profile-stat trattativa"><span class="num" id="m-trattativa">0</span><span class="lbl">In trattativa</span></div>
+      <div class="profile-stat macchina"><span class="num" id="m-macchina">0</span><span class="lbl">Come la macchina</span></div>
+    </div>
+    <div class="overlay-actions">
+      <button class="btn-overlay" id="finish-back">Torna agli specchi</button>
+      <button class="btn-overlay" id="finish-restart">Ricomincia</button>
+      <button class="btn-overlay primary" id="finish-next">
+        Prossima chiave
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: -2px;">
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <polyline points="9,4 13,8 9,12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   LO SPECCHIO — Cinque Chiavi per Rodari, Chiave 3
+   Single-file HTML, vanilla JS, zero dipendenze esterne.
+   Niente persistenza: ogni accesso parte da zero.
+   ============================================================ */
+
+const LEVEL = 3;
+const CHIAVI_INFO = {
+  1: { name: 'La Lente',    url: 'index.html' },
+  2: { name: 'La Bussola',  url: 'bussola.html' },
+  3: { name: 'Lo Specchio', url: '' },
+  4: { name: 'Il Ponte',    url: '' },
+  5: { name: 'Il Taccuino', url: '' }
+};
+
+/* ----------- SITUAZIONI -----------
+   Tre tipi di scelta per ogni situazione:
+   - fatica       = "come il bambino dopo il risveglio" (sceglie di lavorare di testa propria)
+   - trattativa   = "in trattativa con la macchina" (via di mezzo, negoziata)
+   - macchina     = "come il bambino che voleva la macchina" (scorciatoia)
+   Nessun giusto/sbagliato. Ogni scelta riceve uno specchio narrativo
+   che riprende un elemento della favola e rilancia la riflessione. */
+
+const SITUATIONS = [
+  {
+    title: "Il tema di italiano",
+    scene: "Mercoledì sera, devi consegnare domani un tema su «L'autunno». Hai mezz'ora libera prima di cena. Sul tablet c'è ChatGPT, sa scrivere temi in trenta secondi.",
+    choices: [
+      {
+        type: 'fatica',
+        text: "Lo scrivo io, anche se mi viene così così. Almeno è il mio tema.",
+        mirror: "Hai scelto la fatica. Nella favola, il bambino corre a fare i compiti <em>solo dopo</em> aver perso il cervello e averlo dovuto chiedere indietro. Tu lo stai facendo prima, senza bisogno di passare dalla gabbia. Domanda da portarti dietro: cosa ti ha fatto scegliere così, oggi?"
+      },
+      {
+        type: 'trattativa',
+        text: "Mi faccio dare tre idee da ChatGPT, poi scelgo quella che mi piace e la scrivo a parole mie.",
+        mirror: "Hai trattato. Ti sei tenuto il cervello, ma hai chiesto in prestito qualcosa alla macchina. Nella favola di Rodari questa via di mezzo non c'è — il bambino o vuole tutto, o si sveglia. Tu sei in una zona che Rodari nel 1973 non poteva ancora raccontare. Domanda: come fai a sapere quando hai chiesto troppo in prestito?"
+      },
+      {
+        type: 'macchina',
+        text: "Mi faccio scrivere tutto il tema, copio, consegno. Tanto domani devo solo leggerlo.",
+        mirror: "La macchina di Rodari faceva i compiti «tutto da sola in un minuto». Hai scelto la stessa cosa. Nel suo sogno, il bambino in cambio della macchina dava via il cervello: non poteva più pensare, non poteva più volare libero, finiva in una gabbia stretta. Tu, dando via questo tema, cosa stai dando in cambio davvero? Pensaci — non è una domanda retorica."
+      }
+    ]
+  },
+  {
+    title: "Il problema di matematica",
+    scene: "È sabato pomeriggio. Hai un problema di matematica e non sai come iniziare. Sul telefono c'è un'app che basta inquadrare il testo e ti dà la soluzione passo passo.",
+    choices: [
+      {
+        type: 'fatica',
+        text: "Provo per un'ora. Se non ci arrivo lo segno, lunedì chiedo al prof o a un compagno.",
+        mirror: "Hai accettato che a volte si sta fermi davanti a un foglio bianco — e che non capire <em>subito</em> non è uguale a non capire <em>mai</em>. Il bambino di Rodari, quando aveva il cervello, faceva fatica: ma era la sua fatica. Tu hai scelto di tenertela. Una piccola domanda: cosa cambia, per te, tra «non lo so» e «non lo so ancora»?"
+      },
+      {
+        type: 'trattativa',
+        text: "Provo da solo. Se mi blocco, guardo solo il primo passaggio per sbloccarmi, poi continuo io.",
+        mirror: "È una trattativa fine: chiedi alla macchina di darti la <em>spinta</em>, non la <em>soluzione</em>. Nella favola, il bambino non aveva questa possibilità — gli veniva offerto solo «tutto o niente». Tu vivi in un mondo dove ci sono molte vie di mezzo. Ti faccio una domanda da portare a casa: chi decide quanto è «solo il primo passaggio»?"
+      },
+      {
+        type: 'macchina',
+        text: "Apro l'app, inquadro il problema, copio la soluzione. Lunedì dirò che l'ho risolto io.",
+        mirror: "L'omino della favola diceva: «Se i compiti glieli fa la macchina, a che cosa gli serve il cervello?». La domanda era una trappola, e il babbo c'era cascato. Tu, copiando, cosa risponderesti? La risposta a quella domanda non è ovvia — e capire <em>perché</em> serve il cervello anche quando una macchina fa già il compito, è uno dei lavori più importanti che puoi fare a tredici anni."
+      }
+    ]
+  },
+  {
+    title: "La presentazione di gruppo",
+    scene: "Lavoro di gruppo sulla Mongolia. La tua compagna ti scrive: «Faccio io tutto con ChatGPT, così non perdiamo tempo, tu mi metti il nome accanto al mio nella copertina». Cosa rispondi?",
+    choices: [
+      {
+        type: 'fatica',
+        text: "«Dai, no, dividiamoci i pezzi: io faccio le mappe e le immagini, tu il testo e le fonti.»",
+        mirror: "Hai scelto di non farti regalare il tuo pezzo. Nella favola, il <em>babbo</em> firma l'accordo per dare via il cervello del figlio — il bambino non decide da solo. La tua compagna ti sta offrendo lo stesso scambio: lei tiene il cervello, tu metti la firma. Tu hai detto di no. Domanda: ti pesa di più la fatica del lavoro, o quella della discussione che hai dovuto fare?"
+      },
+      {
+        type: 'trattativa',
+        text: "«Usa pure ChatGPT per partire, ma poi rivediamo tutto insieme e ci aggiungiamo cose nostre.»",
+        mirror: "Hai accettato che la macchina entri in classe, ma hai messo un patto: «rivediamo insieme». È una posizione adulta. Nella favola, però, una volta che la macchina è entrata in casa, il bambino la voleva subito. Tu come fai a far rispettare il «rivediamo insieme», se la tua compagna invece dice «ma dai, va bene così»? Non è una domanda finta: è una delle più difficili che ti faranno a scuola."
+      },
+      {
+        type: 'macchina',
+        text: "«Grazie, sei un mito!» Tanto la prof non si accorge.",
+        mirror: "Il babbo della favola, davanti alla proposta dell'omino, esita un attimo — «Ma siete matto!» — e poi dice: «Va bene, prendete il suo cervello». L'hai fatto anche tu, con un emoji più simpatico. La prof potrebbe accorgersene, certo. Ma la domanda più seria non è quella. È: <em>tu</em> te ne accorgi, ogni volta che lo fai, di cosa stai cedendo?"
+      }
+    ]
+  },
+  {
+    title: "Il riassunto del libro",
+    scene: "La prof ha assegnato il riassunto di un libro che ti ha consegnato due settimane fa. Non l'hai ancora aperto. Su internet trovi già fatto un riassunto ben scritto di quello stesso libro.",
+    choices: [
+      {
+        type: 'fatica',
+        text: "Leggo il libro stasera, lo faccio io. Magari mi piace anche.",
+        mirror: "Hai scelto di darti la possibilità di scoprire qualcosa che ancora non conosci. Nella favola di Rodari il bambino, prima dell'incubo, non sapeva a cosa serve fare i compiti. Lo capisce solo dopo essersi svegliato. Tu hai deciso di scoprirlo prima — leggendo. Una domanda gentile: cosa ti aspetti, da quel libro? Forse niente. E forse ti sorprenderà."
+      },
+      {
+        type: 'trattativa',
+        text: "Leggo il libro, poi leggo anche il riassunto online: se ho dimenticato qualcosa lo aggiungo, ma scrivo con parole mie.",
+        mirror: "Stai usando il riassunto online come uno specchio per il tuo lavoro: lo guardi per vedere se ti sei dimenticato qualcosa. Non è la macchina di Rodari — è un controllo. Però attenzione: a volte uno specchio insegna a copiare lo sguardo dell'altro, e si smette di vedere con i propri occhi. Domanda: quando guardi quel riassunto, ascolti più la voce dell'autore o la tua?"
+      },
+      {
+        type: 'macchina',
+        text: "Copio il riassunto, cambio due parole, fine. Tanto è solo un riassunto.",
+        mirror: "«Tanto è solo un riassunto.» È così che, nella favola, le cose iniziano: il bambino dice «compramela, babbo» <em>solo</em> per i compiti. Solo questo, solo quello, solo un riassunto. La macchina di Rodari era piccola, stava dentro una borsa. Quello che ti porta via lo stai decidendo tu, un solo alla volta. Te la racconto come l'avrebbe raccontata lui: nessuno ti sta giudicando, ma è bene sapere cosa si sta scambiando, mentre lo si scambia."
+      }
+    ]
+  },
+  {
+    title: "La domenica sera",
+    scene: "Domenica, ore 21. Hai due ore prima di dormire. Sul comodino c'è il libro che ti hanno regalato a Natale, ancora intonso. In mano hai il telefono, e la mano va su TikTok quasi da sola.",
+    choices: [
+      {
+        type: 'fatica',
+        text: "Metto giù il telefono e apro il libro, anche solo per venti minuti.",
+        mirror: "Hai fatto una cosa che il bambino della favola, dopo il sogno, capisce di colpo: che la libertà non è la leggerezza. Quando lui non aveva più cervello volava da una stanza all'altra, sembrava libero — ma dovevano chiuderlo in gabbia per non farlo finire male. Tu hai scelto di stare un po' fermo davanti a un libro, e proprio per questo non hai bisogno di gabbie. Domanda: com'è il silenzio, quando ti dai venti minuti senza schermo?"
+      },
+      {
+        type: 'trattativa',
+        text: "Mi do venti minuti di TikTok col timer, poi spengo e leggo.",
+        mirror: "Hai messo un confine. È una cosa che il bambino di Rodari non sa fare: o ha la macchina, o non ce l'ha; o ha il cervello, o non ce l'ha. Tu, invece, sai dire «venti minuti sì, poi basta». La domanda difficile però è: quante volte, quando il timer suona, vai davvero a leggere? Non è una trappola — è solo l'unica domanda onesta da fare a un patto che sembra ragionevole."
+      },
+      {
+        type: 'macchina',
+        text: "Scrollo. Tanto è più rilassante. Magari leggo un'altra sera.",
+        mirror: "Nella favola, dopo che il bambino dà via il cervello, diventa così leggero che vola — e in poco tempo finisce in una gabbia stretta, perché senza pensiero la libertà non è più libertà, è un guaio. TikTok funziona così: ti fa sentire leggero, ma decide lui dove ti porta. Non te lo sto dicendo per farti smettere — solo perché tu sappia che la gabbia di Rodari, oggi, ha lo schermo luminoso. Domanda: chi sta scegliendo, in questo momento? Tu, o l'algoritmo?"
+      }
+    ]
+  }
+];
+
+/* ----------- STATE (in-memory only) ----------- */
+const state = {
+  currentSit: 0,
+  choices: SITUATIONS.map(() => null) // null | 'fatica' | 'trattativa' | 'macchina'
+};
+
+/* ----------- HELPERS ----------- */
+function showToast(message, options) {
+  options = options || {};
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = 'toast show';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { t.className = 'toast'; }, options.duration || 2000);
+}
+
+function markLevelCompleted(level) {
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) {
+    const wasCompleted = btn.classList.contains('completed');
+    btn.classList.add('completed');
+    if (!wasCompleted) {
+      btn.classList.add('celebrating');
+      setTimeout(() => btn.classList.remove('celebrating'), 800);
+    }
+  }
+}
+
+/* ----------- RENDER ----------- */
+const LETTERS = ['A', 'B', 'C'];
+
+function loadSituation(idx) {
+  if (idx < 0 || idx >= SITUATIONS.length) return;
+  state.currentSit = idx;
+  const sit = SITUATIONS[idx];
+  const chosen = state.choices[idx];
+
+  document.getElementById('sit-counter').textContent = `Specchio ${idx + 1} di ${SITUATIONS.length}`;
+  document.getElementById('sit-title').textContent = sit.title;
+  document.getElementById('sit-scene').textContent = sit.scene;
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  sit.choices.forEach((ch, i) => {
+    const card = document.createElement('div');
+    card.className = 'choice-card';
+    if (chosen) card.classList.add('locked');
+    if (chosen === ch.type) card.classList.add('selected');
+    card.innerHTML = `
+      <div class="choice-letter">${LETTERS[i]}</div>
+      <div class="choice-text">${ch.text}</div>
+    `;
+    card.addEventListener('click', () => onChoiceClick(i));
+    choicesEl.appendChild(card);
+  });
+
+  // Mirror state
+  const mirror = document.getElementById('mirror');
+  if (chosen) {
+    const choiceObj = sit.choices.find(c => c.type === chosen);
+    document.getElementById('mirror-content').innerHTML = choiceObj.mirror;
+    const isLast = idx === SITUATIONS.length - 1;
+    document.getElementById('mirror-next-label').textContent = isLast ? 'Concludi lo Specchio' : 'Prossimo specchio';
+    mirror.classList.add('visible');
+  } else {
+    mirror.classList.remove('visible');
+    document.getElementById('mirror-content').innerHTML = '';
+  }
+
+  updateProgress();
+  // Smooth scroll to top of page for new situation
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function onChoiceClick(choiceIdx) {
+  const idx = state.currentSit;
+  if (state.choices[idx]) return; // already chosen
+  const sit = SITUATIONS[idx];
+  const choice = sit.choices[choiceIdx];
+  state.choices[idx] = choice.type;
+
+  // Re-render to show locked state + mirror
+  loadSituation(idx);
+
+  // Smooth scroll to mirror after short delay
+  setTimeout(() => {
+    document.getElementById('mirror').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 200);
+}
+
+function onMirrorNext() {
+  const idx = state.currentSit;
+  if (idx < SITUATIONS.length - 1) {
+    loadSituation(idx + 1);
+  } else {
+    showFinishOverlay();
+  }
+}
+
+function updateProgress() {
+  const container = document.getElementById('progress-dots');
+  container.innerHTML = '';
+  state.choices.forEach(c => {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    if (c) dot.classList.add(c); // fatica | trattativa | macchina
+    container.appendChild(dot);
+  });
+  const done = state.choices.filter(c => c !== null).length;
+  document.getElementById('progress-text').textContent = `${done}/${SITUATIONS.length}`;
+}
+
+/* ----------- FINISH ----------- */
+function showFinishOverlay() {
+  const fatica     = state.choices.filter(c => c === 'fatica').length;
+  const trattativa = state.choices.filter(c => c === 'trattativa').length;
+  const macchina   = state.choices.filter(c => c === 'macchina').length;
+
+  document.getElementById('m-fatica').textContent     = fatica;
+  document.getElementById('m-trattativa').textContent = trattativa;
+  document.getElementById('m-macchina').textContent   = macchina;
+
+  // Narrative body — sempre non giudicante, descrive senza prescrivere
+  let body;
+  if (fatica === 5) {
+    body = "In ogni specchio hai scelto la fatica del cervello. Non è frequente — e non è nemmeno «la cosa giusta». È una posizione precisa, che ha un costo e un valore. Solo, ricordati che fatica non vuol dire mai chiedere aiuto a nessuno: vuol dire decidere tu da chi farsi aiutare, e quanto.";
+  } else if (macchina === 5) {
+    body = "In ogni specchio hai scelto la macchina. Non c'è giudizio — è quello che il bambino della favola voleva fare a tutti i costi. Però il bambino, nel sogno, finisce in una gabbia stretta. Ti faccio una domanda da portarti via: dove sta, oggi, la tua gabbia? Non te lo sto dicendo retoricamente. Cercala davvero.";
+  } else if (trattativa >= 4) {
+    body = "Hai quasi sempre trattato. È una posizione adulta, intelligente, e anche scivolosa: chi non sceglie mai da che parte stare, alla fine può anche non scegliere più. Una domanda buona da portarti dietro: c'è qualcosa, in tutta questa storia, di cui non saresti disposto a trattare per nessun motivo?";
+  } else if (macchina >= 3) {
+    body = `Hai scelto ${macchina} volte la macchina, ${trattativa} la trattativa, ${fatica} la fatica. Non c'è un voto qui — ma c'è uno specchio. Quando tornerai a fare i compiti la prossima volta, prova a tenere a mente uno solo dei cinque specchi che hai attraversato. Quello che ti ha colpito di più. È il tuo punto di partenza.`;
+  } else if (fatica >= 3) {
+    body = `Hai scelto ${fatica} volte la fatica, ${trattativa} la trattativa, ${macchina} la macchina. Hai uno stile di pensiero che fa fatica e che ci sta — non perché «così si fa», ma perché ti sei accorto che il cervello, se non lo usi, qualcun altro lo userà al posto tuo. È una bella consapevolezza per la tua età.`;
+  } else {
+    body = `Hai distribuito le tue scelte: ${fatica} fatica, ${trattativa} trattativa, ${macchina} macchina. È un profilo che dice molto: cambi posizione a seconda della situazione. Vuol dire che pensi, ogni volta. La prossima volta, però, prova a chiederti perché in alcune situazioni hai detto sì alla macchina e in altre no. Quella differenza è la parte interessante.`;
+  }
+
+  document.getElementById('finish-body').innerHTML = body;
+
+  // Visibilità "Prossima chiave": solo se Il Ponte è configurato
+  const nextBtn = document.getElementById('finish-next');
+  const nextLvl = LEVEL + 1;
+  const nextChiave = document.querySelector(`.chiave[data-level="${nextLvl}"]`);
+  const nextUrl = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  const canGoNext = nextChiave && !nextChiave.classList.contains('disabled') && nextUrl;
+  nextBtn.style.display = canGoNext ? '' : 'none';
+
+  document.getElementById('finish-overlay').classList.add('open');
+  markLevelCompleted(LEVEL);
+}
+
+function closeFinishOverlay() {
+  document.getElementById('finish-overlay').classList.remove('open');
+}
+
+function goToNextChiave() {
+  const nextLvl = LEVEL + 1;
+  const url = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  if (url) {
+    closeFinishOverlay();
+    window.location.href = url;
+  }
+}
+
+function restartLevel() {
+  if (!confirm('Vuoi ricominciare lo Specchio? Tutte le scelte verranno azzerate.')) return;
+  state.choices = SITUATIONS.map(() => null);
+  state.currentSit = 0;
+  closeFinishOverlay();
+  loadSituation(0);
+}
+
+/* ----------- CHIAVE NAVIGATION ----------- */
+function onChiaveClick(btn) {
+  const lvl = parseInt(btn.dataset.level, 10);
+  if (lvl === LEVEL) return;
+  if (btn.classList.contains('disabled')) {
+    showToast(`${CHIAVI_INFO[lvl].name} sarà disponibile presto`);
+    return;
+  }
+  const url = btn.dataset.url || CHIAVI_INFO[lvl].url;
+  if (url) {
+    window.location.href = url;
+  } else {
+    showToast(`${CHIAVI_INFO[lvl].name} non è ancora collegata`, { duration: 2000 });
+  }
+}
+
+/* ----------- INIT ----------- */
+document.addEventListener('DOMContentLoaded', () => {
+  loadSituation(0);
+  updateProgress();
+
+  document.getElementById('mirror-next-btn').addEventListener('click', onMirrorNext);
+  document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
+
+  document.querySelectorAll('.chiave').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      onChiaveClick(btn);
+    });
+  });
+
+  document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
+  document.getElementById('finish-restart').addEventListener('click', restartLevel);
+  document.getElementById('finish-next').addEventListener('click', goToNextChiave);
+});
+</script>
+
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cinque Chiavi per Rodari — La Bussola</title>
+<title>Cinque Chiavi per Rodari — La macchina per fare i compiti</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
@@ -88,19 +88,17 @@ button { font-family: inherit; }
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   color: var(--grey-mid);
   min-width: 56px;
-  position: relative;
-  text-decoration: none;
 }
-.chiave:hover:not(.disabled):not(.active) { background: var(--grey-bg); }
+.chiave:hover:not(.disabled) { background: var(--grey-bg); }
 .chiave.active {
   background: var(--green-soft);
   border-color: var(--green-light);
   color: var(--green-deep);
-  cursor: default;
 }
 .chiave.disabled { cursor: not-allowed; opacity: 0.45; }
 .chiave-icon { width: 22px; height: 22px; }
 .chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave { position: relative; }
 .chiave-done {
   position: absolute;
   top: 2px; right: 2px;
@@ -116,494 +114,538 @@ button { font-family: inherit; }
   color: var(--green-deep);
   opacity: 1;
 }
+@keyframes chiave-celebra {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  70%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+.chiave.celebrating .chiave-done {
+  animation: chiave-celebra 0.7s ease-out;
+}
 
 .right-block { display: flex; align-items: center; gap: 12px; }
 
 .progress-pill {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px;
   background: var(--grey-bg);
   border-radius: 100px;
-  font-size: 13px;
-  color: var(--grey-deep);
-  font-weight: 500;
+  padding: 6px 14px 6px 10px;
+  font-size: 12px; color: var(--ink);
+  font-weight: 500; white-space: nowrap;
+  border: 1px solid var(--grey-soft);
 }
-.progress-dots { display: inline-flex; gap: 4px; }
-.progress-dots .dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
+.progress-pill .count {
+  font-family: 'Lora', serif;
+  font-weight: 700; font-size: 14px;
+  color: var(--green-deep);
+}
+.progress-pill .mini-track {
+  width: 60px; height: 5px;
   background: var(--grey-soft);
-  transition: background 0.2s;
+  border-radius: 3px;
+  display: flex; overflow: hidden;
 }
-.progress-dots .dot.solved { background: var(--green-light); }
-.progress-dots .dot.helped { background: var(--amber); }
-.progress-dots .dot.exhausted { background: var(--grey-mid); }
+.progress-pill .mini-fill { height: 100%; transition: width 0.3s ease; }
+.progress-pill .mini-fill.green { background: var(--green-light); }
+.progress-pill .mini-fill.amber { background: var(--amber); }
+.progress-pill .mini-fill.grey { background: var(--grey-mid); }
 
 .icon-btn {
-  background: white;
-  border: 1px solid var(--grey-soft);
-  border-radius: 8px;
   width: 36px; height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--grey-soft);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: var(--grey-deep);
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  padding: 0;
 }
-.icon-btn:hover { border-color: var(--grey-mid); background: var(--grey-bg); }
+.icon-btn:hover { background: var(--grey-bg); border-color: var(--grey-mid); }
 .icon-btn svg { width: 16px; height: 16px; }
 
-@media (max-width: 720px) {
-  .topbar { padding: 0 12px; gap: 12px; }
+@media (max-width: 768px) {
+  .topbar { padding: 0 14px; gap: 12px; --topbar-h: 60px; height: 60px; }
   .brand-row1 { font-size: 14px; }
-  .brand-row2 { font-size: 10px; }
+  .brand-row2 { display: none; }
   .chiave { min-width: 40px; padding: 4px 6px; }
   .chiave-num { display: none; }
   .chiave-icon { width: 20px; height: 20px; }
-  .progress-pill { display: none; }
+  .progress-pill { padding: 5px 10px 5px 8px; font-size: 11px; }
+  .progress-pill .mini-track { width: 40px; }
 }
 
-/* ============ MAIN AREA: BUSSOLA ============ */
-.bussola-page {
-  flex: 1;
-  overflow: hidden;
-  padding: 16px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  position: relative;
-  min-height: 0;
-}
-
-.episode-header {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  flex-shrink: 0;
-}
-.episode-counter {
-  font-family: 'Lora', serif;
-  font-style: italic;
-  font-size: 14px;
-  color: var(--amber);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-.episode-title {
-  font-family: 'Lora', serif;
-  font-weight: 600;
-  font-size: 22px;
-  color: var(--green-deep);
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-.episode-prompt {
-  font-size: 14px;
-  color: var(--grey-deep);
-  margin: 0;
-  max-width: 720px;
-  font-style: italic;
-  flex-shrink: 0;
-}
-
-.replay-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: white;
-  border: 1px solid var(--green-light);
-  color: var(--green-deep);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 100px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  align-self: flex-start;
-  flex-shrink: 0;
-}
-.replay-btn:hover { background: var(--green-soft); }
-.replay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.replay-btn svg { width: 14px; height: 14px; }
-.replay-btn.playing {
-  background: var(--green-soft);
-  border-color: var(--green);
-}
-
-/* Compass grid */
-.compass-wrap {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
-}
-.compass {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
-  grid-template-rows: auto 1fr auto;
-  gap: 16px;
-  width: 100%;
-  max-width: 920px;
-  height: 100%;
-  max-height: 480px;
-}
-.compass-card {
-  background: white;
-  border: 1.5px solid var(--grey-soft);
-  border-radius: 14px;
-  padding: 16px 18px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 14.5px;
-  line-height: 1.45;
-  color: var(--ink-soft);
-  font-family: 'Lora', serif;
-  position: relative;
-  user-select: none;
-  min-height: 80px;
-}
-.compass-card:hover:not(.disabled):not(.wrong):not(.solved):not(.helped):not(.exhausted) {
-  border-color: var(--green-light);
-  background: #FCFCF8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(27, 109, 63, 0.08);
-}
-.compass-card[data-dir="N"] { grid-column: 2; grid-row: 1; }
-.compass-card[data-dir="W"] { grid-column: 1; grid-row: 2; }
-.compass-card[data-dir="E"] { grid-column: 3; grid-row: 2; }
-.compass-card[data-dir="S"] { grid-column: 2; grid-row: 3; }
-
-.compass-card .dir-label {
-  position: absolute;
-  top: 8px; left: 12px;
-  font-family: 'DM Sans', sans-serif;
-  font-style: normal;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--grey-mid);
-}
-.compass-card.wrong {
-  border-color: var(--amber);
-  background: var(--amber-soft);
-  animation: shake 0.32s ease-out;
-}
-.compass-card.solved {
-  border-color: var(--green-light);
-  background: var(--green-soft);
-  color: var(--green-deep);
-  cursor: default;
-}
-.compass-card.helped {
-  border-color: var(--amber);
-  background: #FDF6E8;
-  color: var(--amber-deep);
-  cursor: default;
-}
-.compass-card.exhausted {
-  border-color: var(--grey-mid);
-  background: var(--grey-bg);
-  color: var(--grey-deep);
-  cursor: default;
-}
-.compass-card.exhausted.was-correct {
-  border-style: dashed;
-  border-color: var(--green-light);
-  color: var(--green-deep);
-  background: #F4F8F1;
-}
-.compass-card.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
-}
-
-/* Center medallion */
-.compass-center {
-  grid-column: 2; grid-row: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.compass-medallion {
-  width: 100%;
-  height: 100%;
-  max-width: 220px;
-  max-height: 220px;
-  border-radius: 50%;
-  background: var(--green-soft);
-  border: 2px solid var(--green-light);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  color: var(--green-deep);
-}
-.medallion-icon { width: 56px; height: 56px; opacity: 0.7; }
-.medallion-attempts {
-  margin-top: 6px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--green-deep);
-  font-weight: 600;
-}
-.medallion-chance-dots {
-  display: flex; gap: 6px; margin-top: 8px;
-}
-.medallion-chance-dots .cdot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--green-light);
-  opacity: 0.85;
-}
-.medallion-chance-dots .cdot.used { background: var(--amber); opacity: 0.7; }
-
-/* Feedback band */
-.feedback-band {
-  flex-shrink: 0;
-  min-height: 64px;
-  padding: 12px 18px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid var(--grey-soft);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-family: 'Lora', serif;
-  font-size: 14.5px;
-  line-height: 1.5;
-  color: var(--ink-soft);
-  transition: all 0.2s ease;
-}
-.feedback-band.empty {
-  background: transparent;
-  border-color: transparent;
-  color: var(--grey-mid);
-  font-style: italic;
-  justify-content: center;
-}
-.feedback-band.wrong {
-  border-color: var(--amber);
-  background: var(--amber-soft);
-  color: var(--amber-deep);
-}
-.feedback-band.solved {
-  border-color: var(--green-light);
-  background: var(--green-soft);
-  color: var(--green-deep);
-}
-.feedback-band.exhausted {
-  border-color: var(--grey-mid);
-  background: var(--grey-bg);
-}
-.feedback-icon { flex-shrink: 0; width: 28px; height: 28px; }
-.feedback-text { flex: 1; }
-.feedback-next-btn {
-  flex-shrink: 0;
-  background: var(--green);
-  color: white;
-  border: none;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 9px 18px;
-  border-radius: 100px;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: 'DM Sans', sans-serif;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.feedback-next-btn:hover { background: var(--green-deep); }
-.feedback-next-btn svg { width: 12px; height: 12px; }
-
-/* Bottom controls strip (progress dots + replay info) */
-.bottom-strip {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 4px 0;
-  gap: 16px;
-  font-size: 12px;
-  color: var(--grey-mid);
-}
-
-/* ============ AUDIO BAR ============ */
-.audio-bar {
+/* ============ AUDIO STRIP ============ */
+.audio-strip {
   height: var(--audio-h);
   background: white;
-  border-top: 1px solid var(--grey-soft);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 16px;
+  border-bottom: 1px solid var(--grey-soft);
+  display: flex; align-items: center;
+  gap: 14px;
+  padding: 0 32px;
   flex-shrink: 0;
 }
+
 .play-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: none;
   background: var(--green);
   color: white;
-  border: none;
-  border-radius: 50%;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(27,109,63,0.25);
 }
-.play-btn:hover { background: var(--green-deep); }
-.play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.play-btn svg { width: 14px; height: 14px; fill: currentColor; }
+.play-btn:hover { background: var(--green-deep); transform: scale(1.05); }
+.play-btn:active { transform: scale(0.94); }
+.play-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-.audio-info {
-  font-size: 13px;
-  color: var(--grey-deep);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-.audio-info .frag-label {
-  font-weight: 500;
+.audio-state {
+  font-family: 'Lora', serif;
+  font-style: italic; font-size: 14px;
   color: var(--ink-soft);
+  flex-shrink: 0;
+  white-space: nowrap; max-width: 200px;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.audio-info .frag-time {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-feature-settings: 'tnum';
-  font-size: 12px;
-  color: var(--grey-mid);
-}
-.audio-progress {
-  flex: 1;
-  height: 4px;
+
+.scrubber {
+  flex: 1; height: 6px;
   background: var(--grey-soft);
-  border-radius: 100px;
-  overflow: hidden;
-  max-width: 280px;
+  border-radius: 3px;
+  position: relative; cursor: pointer;
+  min-width: 100px;
 }
-.audio-progress-fill {
+.scrubber-fill {
+  position: absolute; top: 0; left: 0;
   height: 100%;
-  background: var(--green-light);
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.1s linear;
   width: 0%;
-  transition: width 0.15s linear;
+  pointer-events: none;
+}
+.scrubber-thumb {
+  position: absolute; top: 50%;
+  width: 14px; height: 14px;
+  background: white;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
-@media (max-width: 720px) {
-  .audio-bar { padding: 0 12px; gap: 8px; }
-  .audio-progress { max-width: 120px; }
-  .audio-info .frag-label { display: none; }
+.audio-time {
+  font-feature-settings: 'tnum';
+  font-size: 11px; color: var(--grey-mid);
+  min-width: 75px; text-align: right;
+  white-space: nowrap;
 }
 
-/* ============ FAB FINISH ============ */
+@media (max-width: 768px) {
+  .audio-strip { --audio-h: 50px; height: 50px; padding: 0 14px; gap: 10px; }
+  .audio-state { font-size: 12px; max-width: 110px; }
+  .audio-time { font-size: 10px; min-width: 65px; }
+}
+
+/* ============ CLOZE PAGE ============ */
+.cloze-page {
+  flex: 1; position: relative;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.cloze-frame {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 48px 88px;
+  overflow: hidden;
+}
+.cloze-content {
+  max-width: 780px; width: 100%;
+  font-family: 'Lora', serif;
+  font-size: 19px; line-height: 1.7;
+  color: var(--ink);
+  max-height: 100%; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--grey-soft) transparent;
+  padding-right: 8px;
+}
+.cloze-content::-webkit-scrollbar { width: 6px; }
+.cloze-content::-webkit-scrollbar-track { background: transparent; }
+.cloze-content::-webkit-scrollbar-thumb { background: var(--grey-soft); border-radius: 3px; }
+
+.cloze-content p {
+  margin: 0 0 0.75em;
+  padding: 4px 8px;
+  margin-left: -8px; margin-right: -8px;
+  border-radius: 4px;
+  transition: background-color 0.45s ease;
+}
+.cloze-content p:last-child { margin-bottom: 0; }
+.cloze-content p.active { background-color: rgba(196, 128, 26, 0.08); }
+
+.cloze-content .titolo {
+  font-style: italic; font-size: 17px;
+  color: var(--green-deep);
+  text-align: center;
+  margin-bottom: 1.4em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.cloze-content .titolo::before {
+  content: ''; display: block;
+  width: 40px; height: 1px;
+  background: var(--grey-mid);
+  margin: 0 auto 12px;
+}
+.cloze-content .titolo::after {
+  content: ''; display: block;
+  width: 40px; height: 1px;
+  background: var(--grey-mid);
+  margin: 12px auto 0;
+}
+
+@media (max-width: 768px) {
+  .cloze-frame { padding: 16px 18px 72px; }
+  .cloze-content { font-size: 16px; line-height: 1.65; }
+  .cloze-content .titolo { font-size: 15px; margin-bottom: 1em; }
+}
+@media (max-height: 720px) {
+  .cloze-content { font-size: 17px; line-height: 1.6; }
+  .cloze-frame { padding: 20px 40px 76px; }
+}
+@media (max-height: 580px) {
+  .cloze-content { font-size: 15px; line-height: 1.5; }
+  .cloze-frame { padding: 12px 32px 64px; }
+}
+
+/* ============ GAP ============ */
+.gap {
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  margin: 0 1px;
+  position: relative;
+}
+
+.gap-input {
+  font-family: 'Lora', serif;
+  font-size: inherit;
+  font-style: italic;
+  font-weight: 500;
+  border: none;
+  border-bottom: 2px solid var(--grey-mid);
+  background: transparent;
+  padding: 0 6px 1px;
+  text-align: center;
+  color: var(--ink);
+  outline: none;
+  transition: all 0.18s ease;
+  border-radius: 0;
+  letter-spacing: 0.01em;
+}
+
+.gap-input::placeholder {
+  color: var(--grey-mid);
+  opacity: 0.5;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+.gap-input:focus { border-bottom-color: var(--blue); background: var(--blue-soft); }
+
+/* SOLVED: corretta al primo colpo, niente errori, niente hint */
+.gap.solved .gap-input {
+  border-bottom-color: var(--green-light);
+  background: var(--green-soft);
+  color: var(--green-deep);
+  font-weight: 600;
+  font-style: normal;
+  pointer-events: none;
+}
+
+/* HELPED: corretta dopo hint o dopo qualche errore */
+.gap.helped .gap-input {
+  border-bottom-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-weight: 600;
+  font-style: normal;
+}
+.gap.helped.locked .gap-input { pointer-events: none; }
+
+/* WRONG (transitorio): tentativo errato, prima del prossimo input */
+.gap.wrong .gap-input {
+  border-bottom-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber-deep);
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* EXHAUSTED: 3 errori, parola scoperta dal sistema */
+.gap.exhausted .gap-input {
+  border-bottom-color: var(--grey-mid);
+  background: var(--grey-bg);
+  color: var(--grey-deep);
+  font-weight: 500;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.gap-input.shake { animation: gentle-shake 0.45s ease; }
+
+@keyframes gentle-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* CHANCE DOTS: mostra le prove rimanenti dopo il primo errore */
+.gap-chances {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.gap.has-attempts .gap-chances { opacity: 1; }
+.gap.solved .gap-chances,
+.gap.exhausted .gap-chances { opacity: 0; }
+
+.gap-chance-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  transition: all 0.2s ease;
+}
+
+.gap-chance-dot.spent {
+  background: transparent;
+  border: 1px solid var(--grey-mid);
+  width: 5px; height: 5px;
+  box-sizing: border-box;
+}
+
+.gap-tools {
+  display: inline-flex;
+  margin-left: 3px;
+  gap: 2px;
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gap.focused .gap-tools, .gap:hover .gap-tools { opacity: 1; }
+.gap.solved .gap-tools, .gap.exhausted .gap-tools { display: none; }
+
+.tool-btn {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--grey-deep);
+  transition: all 0.15s ease;
+}
+
+.tool-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.tool-btn.replay:hover {
+  border-color: var(--green-light);
+  color: var(--green-deep);
+  background: var(--green-soft);
+}
+
+.tool-btn svg { width: 12px; height: 12px; stroke-width: 2; }
+
+/* ============ FAB CONCLUDI ============ */
 .fab-finish {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 20px; right: 24px;
   background: var(--green);
   color: white;
   border: none;
   border-radius: 100px;
   padding: 12px 22px 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 14px; font-weight: 600;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
+  display: inline-flex; align-items: center;
   gap: 8px;
+  box-shadow: 0 4px 16px rgba(27,109,63,0.28);
   transition: all 0.18s ease;
+  letter-spacing: 0.01em;
   z-index: 30;
-  box-shadow: 0 4px 14px rgba(27, 109, 63, 0.2);
-  font-family: 'DM Sans', sans-serif;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px);
 }
-.fab-finish.visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
+
+.fab-finish:hover {
+  background: var(--green-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(27,109,63,0.32);
 }
-.fab-finish:hover { background: var(--green-deep); }
 .fab-finish svg { width: 14px; height: 14px; }
+
+@media (max-width: 768px) {
+  .fab-finish { bottom: 14px; right: 14px; padding: 10px 18px 10px 20px; font-size: 13px; }
+}
+
+/* ============ SALASTUDIO BADGES ============ */
+.salastudio-badges {
+  position: fixed;
+  top: calc(var(--topbar-h) + 8px);
+  right: 16px;
+  display: flex; flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.ss-badge {
+  pointer-events: auto;
+  background: white;
+  border: 1.5px solid var(--amber);
+  border-radius: 100px;
+  padding: 8px 14px 8px 10px;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(196,128,26,0.18);
+  animation: badge-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 12px; font-weight: 600;
+  color: var(--amber);
+  letter-spacing: 0.01em;
+  cursor: help;
+  position: relative;
+}
+
+@keyframes badge-in {
+  from { opacity: 0; transform: translateX(40px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.ss-badge-icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  color: var(--amber);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ss-badge-icon svg { width: 100%; height: 100%; }
+
+.ss-badge-tooltip {
+  position: absolute;
+  top: 100%; right: 0;
+  margin-top: 8px;
+  background: var(--ink);
+  color: white;
+  font-size: 12px; font-weight: 400;
+  padding: 10px 14px;
+  border-radius: 8px;
+  width: 240px;
+  letter-spacing: 0;
+  font-family: 'Lora', serif;
+  font-style: italic;
+  line-height: 1.45;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.24);
+}
+
+.ss-badge:hover .ss-badge-tooltip { opacity: 1; visibility: visible; }
+
+@media (max-width: 768px) {
+  .salastudio-badges { top: calc(60px + 8px); right: 8px; }
+  .ss-badge { padding: 6px 10px 6px 8px; font-size: 11px; }
+  .ss-badge-icon { width: 14px; height: 14px; }
+  .ss-badge-tooltip { width: 200px; }
+}
 
 /* ============ OVERLAY ============ */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(42, 42, 42, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s ease;
+  position: fixed; inset: 0;
+  background: rgba(20, 20, 18, 0.78);
+  display: none; align-items: center; justify-content: center;
+  z-index: 200;
   padding: 24px;
+  backdrop-filter: blur(4px);
 }
-.overlay.open { opacity: 1; pointer-events: auto; }
+.overlay.open { display: flex; animation: overlay-in 0.3s ease; }
+
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 
 .overlay-card {
-  background: white;
-  border-radius: 18px;
-  padding: 32px 36px;
-  max-width: 520px;
-  width: 100%;
+  background: var(--bg);
+  border-radius: 16px;
+  max-width: 520px; width: 100%;
+  padding: 36px 36px 28px;
+  position: relative;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  animation: card-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
 }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .overlay-card h2 {
-  margin: 0 0 8px;
   font-family: 'Lora', serif;
-  font-weight: 600;
-  font-size: 26px;
+  font-weight: 600; font-size: 24px;
+  margin: 0 0 12px;
   color: var(--green-deep);
   letter-spacing: -0.01em;
 }
 .overlay-card .body {
-  font-size: 15px;
+  font-size: 15px; line-height: 1.65;
   color: var(--ink-soft);
-  margin: 0 0 22px;
-  line-height: 1.55;
+  margin-bottom: 22px;
 }
-.icon-large {
+.overlay-card .icon-large {
   width: 56px; height: 56px;
-  margin: 0 auto 12px;
-  display: block;
+  margin: 0 auto 14px;
+  color: var(--amber);
 }
+.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
 .modal-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin: 18px 0 22px;
+  gap: 10px;
+  margin: 20px 0 22px;
 }
 .modal-stat {
-  background: var(--grey-bg);
-  border-radius: 12px;
-  padding: 14px 8px;
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
 }
 .modal-stat .num {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--ink);
-  font-feature-settings: 'tnum';
-  display: block;
+  font-family: 'Lora', serif;
+  font-size: 26px; font-weight: 600;
+  display: block; line-height: 1;
 }
 .modal-stat .lbl {
-  font-size: 11px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--grey-mid);
   margin-top: 6px; display: block;
 }
@@ -611,7 +653,6 @@ button { font-family: inherit; }
 .modal-stat.helped .num { color: var(--amber); }
 .modal-stat.missed .num { color: var(--grey-mid); }
 
-.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .btn-overlay {
   font-family: inherit;
   font-size: 14px; font-weight: 500;
@@ -624,92 +665,72 @@ button { font-family: inherit; }
   transition: all 0.15s ease;
 }
 .btn-overlay:hover { border-color: var(--grey-mid); }
+
 .btn-overlay.primary {
   background: var(--green);
   border-color: var(--green);
   color: white; font-weight: 600;
 }
-.btn-overlay.primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+.btn-overlay.primary:hover:not(:disabled) {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
+}
+.btn-overlay:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.countdown { font-feature-settings: 'tnum'; font-weight: 700; color: var(--amber); }
 
 /* ============ TOAST ============ */
 .toast {
   position: fixed;
-  bottom: 86px; left: 50%;
+  bottom: 32px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: var(--ink);
   color: white;
-  padding: 12px 22px;
+  padding: 12px 20px;
   border-radius: 100px;
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0;
+  font-size: 13px;
+  font-style: italic;
+  font-family: 'Lora', serif;
+  z-index: 100;
+  opacity: 0; visibility: hidden;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  white-space: nowrap;
   pointer-events: none;
-  transition: all 0.22s ease;
-  z-index: 90;
-  max-width: 90vw;
-  text-align: center;
 }
 .toast.show {
-  opacity: 1;
+  opacity: 1; visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
-.toast.miss { background: var(--amber-deep); }
 
-/* ============ HIDDEN YOUTUBE ============ */
-#yt-frame {
-  position: fixed;
+/* Toast diverso per "mancata" */
+.toast.miss {
+  background: var(--grey-deep);
+  white-space: normal;
+  max-width: 360px;
+  text-align: center;
+}
+
+#yt-container {
+  position: absolute;
   width: 1px; height: 1px;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  top: -100px; left: -100px;
-}
-
-/* ============ MOBILE ADJUSTMENTS ============ */
-@media (max-width: 760px) {
-  .bussola-page { padding: 10px 14px; gap: 8px; }
-  .episode-title { font-size: 18px; }
-  .episode-counter { font-size: 12px; }
-  .compass {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    max-height: none;
-    gap: 8px;
-  }
-  .compass-card[data-dir="N"],
-  .compass-card[data-dir="W"],
-  .compass-card[data-dir="E"],
-  .compass-card[data-dir="S"] {
-    grid-column: 1;
-    grid-row: auto;
-    min-height: 60px;
-    padding: 12px 14px;
-    font-size: 13.5px;
-  }
-  .compass-center {
-    grid-column: 1;
-    grid-row: auto;
-    display: none;
-  }
-  .feedback-band { min-height: 48px; padding: 10px 12px; font-size: 13.5px; }
-  .compass-wrap { padding: 0; }
-}
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 </style>
 </head>
 <body>
 
 <div class="app">
+
   <header class="topbar">
     <div class="brand">
-      <div class="brand-row1">Cinque Chiavi per <span class="accent">Rodari</span></div>
-      <div class="brand-row2">La macchina per fare i compiti · La Bussola</div>
+      <span class="brand-row1">Cinque <span class="accent">Chiavi</span> per Rodari</span>
+      <span class="brand-row2">La macchina per fare i compiti</span>
     </div>
     <nav class="chiavi-nav" aria-label="Cinque chiavi">
-      <a class="chiave" data-level="1" data-url="https://la-macchina-per-fare-i-compiti.vercel.app/" title="Livello 1 — La Lente">
+      <button class="chiave active" data-level="1" title="Livello 1 — La Lente">
         <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="13" cy="13" r="7.5"/>
           <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
@@ -720,27 +741,22 @@ button { font-family: inherit; }
             <polyline points="2.5,6.5 5,9 9.5,3.5"/>
           </svg>
         </span>
-      </a>
-      <button class="chiave active" data-level="2" title="Livello 2 — La Bussola">
+      </button>
+      <button class="chiave disabled" data-level="2" disabled title="La Bussola — in arrivo">
         <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="16" cy="16" r="11"/>
           <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
           <circle cx="16" cy="16" r="1.6" fill="white"/>
         </svg>
         <span class="chiave-num">L2</span>
-        <span class="chiave-done" aria-label="Attraversata">
-          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
-          </svg>
-        </span>
       </button>
-      <button class="chiave disabled" data-level="3" disabled title="Lo Specchio — in arrivo">
+      <a class="chiave" data-level="3" data-url="specchio.html" title="Livello 3 — Lo Specchio">
         <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
           <ellipse cx="16" cy="16" rx="9" ry="11"/>
           <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
         </svg>
         <span class="chiave-num">L3</span>
-      </button>
+      </a>
       <button class="chiave disabled" data-level="4" disabled title="Il Ponte — in arrivo">
         <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M4 22 Q 16 8, 28 22"/>
@@ -762,74 +778,64 @@ button { font-family: inherit; }
       </button>
     </nav>
     <div class="right-block">
-      <div class="progress-pill" title="Episodi attraversati">
-        <span id="progress-text">0/5</span>
-        <span class="progress-dots" id="progress-dots"></span>
+      <div class="progress-pill">
+        <span class="count"><span id="stat-found">0</span>/<span id="stat-total">19</span></span>
+        <span class="mini-track">
+          <span class="mini-fill green" id="fill-green" style="width:0"></span>
+          <span class="mini-fill amber" id="fill-amber" style="width:0"></span>
+          <span class="mini-fill grey" id="fill-grey" style="width:0"></span>
+        </span>
       </div>
       <button class="icon-btn" id="btn-restart-top" title="Ricomincia">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 7.5a5.5 5.5 0 1 1 1.6 3.9"/>
-          <polyline points="2 4 2 7.5 5.5 7.5"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="3,3 3,8 8,8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
     </div>
   </header>
 
-  <main class="bussola-page">
-    <div class="episode-header">
-      <span class="episode-counter" id="ep-counter">Episodio 1 di 5</span>
-      <h1 class="episode-title" id="ep-title">L'arrivo dell'ometto</h1>
-    </div>
-    <p class="episode-prompt" id="ep-prompt">Ascolta il frammento, poi scegli la direzione che secondo te punta al cuore di questo episodio.</p>
-
-    <button class="replay-btn" id="replay-btn">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 4 L12 8 L6 12 Z"/></svg>
-      <span id="replay-label">Ascolta il frammento</span>
+  <div class="audio-strip">
+    <button id="play-btn" class="play-btn" aria-label="Avvia ascolto">
+      <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </button>
-
-    <div class="compass-wrap">
-      <div class="compass" id="compass">
-        <div class="compass-card" data-dir="N"><span class="dir-label">N</span><span class="card-text"></span></div>
-        <div class="compass-card" data-dir="W"><span class="dir-label">O</span><span class="card-text"></span></div>
-        <div class="compass-center">
-          <div class="compass-medallion">
-            <svg class="medallion-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="32" cy="32" r="22"/>
-              <polygon points="32,14 38,32 32,50 26,32" fill="currentColor" stroke="none"/>
-              <circle cx="32" cy="32" r="2.5" fill="white"/>
-            </svg>
-            <div class="medallion-attempts" id="medallion-attempts">Trova il senso</div>
-            <div class="medallion-chance-dots" id="medallion-chance-dots">
-              <span class="cdot"></span><span class="cdot"></span><span class="cdot"></span>
-            </div>
-          </div>
-        </div>
-        <div class="compass-card" data-dir="E"><span class="dir-label">E</span><span class="card-text"></span></div>
-        <div class="compass-card" data-dir="S"><span class="dir-label">S</span><span class="card-text"></span></div>
-      </div>
+    <div class="audio-state" id="audio-state">Premi per ascoltare</div>
+    <div class="scrubber" id="scrubber">
+      <div class="scrubber-fill" id="scrubber-fill"></div>
+      <div class="scrubber-thumb" id="scrubber-thumb" style="left: 0%"></div>
     </div>
+    <div class="audio-time" id="audio-time">0:00 / 2:05</div>
+  </div>
 
-    <div class="feedback-band empty" id="feedback-band">
-      <span class="feedback-text" id="feedback-text">Scegli una direzione per ricevere il primo orientamento.</span>
+  <main class="cloze-page">
+    <div class="cloze-frame">
+      <div class="cloze-content" id="cloze-content"></div>
     </div>
-
     <button class="fab-finish" id="btn-finish">
-      <span>Concludi la Bussola</span>
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="8" x2="13" y2="8"/>
-        <polyline points="9,4 13,8 9,12"/>
-      </svg>
+      Concludi
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </main>
 
-  <div class="audio-bar">
-    <button class="play-btn" id="play-btn" aria-label="Avvia o ferma il frammento">
-      <svg id="play-icon" viewBox="0 0 14 14"><polygon points="3,2 12,7 3,12"/></svg>
-    </button>
-    <div class="audio-info">
-      <span class="frag-label" id="frag-label">Frammento episodio</span>
-      <div class="audio-progress"><div class="audio-progress-fill" id="audio-fill"></div></div>
-      <span class="frag-time" id="frag-time">0:00 / 0:00</span>
+</div>
+
+<div class="salastudio-badges" id="ss-badges"></div>
+<div id="yt-container"><div id="yt-player"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="ss-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="24" cy="24" r="20"/>
+      <line x1="24" y1="14" x2="24" y2="26" stroke-linecap="round"/>
+      <circle cx="24" cy="32" r="1.5" fill="currentColor"/>
+    </svg>
+    <h2>Fermati un attimo</h2>
+    <p class="body">Le parole della favola hanno bisogno di tempo per arrivare. Hai corso un po' troppo: ascolta, respira, e riprendi quando il testo è di nuovo lì con te.</p>
+    <div class="overlay-actions">
+      <button class="btn-overlay primary" id="ss-resume" disabled>
+        Riprendo con calma <span class="countdown" id="ss-countdown">(10)</span>
+      </button>
     </div>
   </div>
 </div>
@@ -837,19 +843,18 @@ button { font-family: inherit; }
 <div class="overlay" id="finish-overlay">
   <div class="overlay-card">
     <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
-      <circle cx="24" cy="24" r="16"/>
-      <polygon points="24,11 28,24 24,37 20,24" fill="currentColor" stroke="none"/>
-      <circle cx="24" cy="24" r="2.4" fill="white"/>
+      <circle cx="20" cy="20" r="11"/>
+      <line x1="28" y1="28" x2="38" y2="38" stroke-linecap="round"/>
     </svg>
-    <h2 id="finish-title">Hai attraversato la Bussola</h2>
-    <p class="body" id="finish-body">Hai trovato l'orientamento dentro la favola.</p>
+    <h2 id="finish-title">Hai attraversato la prima chiave</h2>
+    <p class="body" id="finish-body">Hai ritrovato le parole della favola.</p>
     <div class="modal-stats">
-      <div class="modal-stat alone"><span class="num" id="m-alone">0</span><span class="lbl">Al primo colpo</span></div>
-      <div class="modal-stat helped"><span class="num" id="m-helped">0</span><span class="lbl">Con prove</span></div>
-      <div class="modal-stat missed"><span class="num" id="m-missed">0</span><span class="lbl">Rivelate</span></div>
+      <div class="modal-stat alone"><span class="num" id="m-alone">0</span><span class="lbl">Da solo</span></div>
+      <div class="modal-stat helped"><span class="num" id="m-helped">0</span><span class="lbl">Con aiuto</span></div>
+      <div class="modal-stat missed"><span class="num" id="m-missed">0</span><span class="lbl">Mancate</span></div>
     </div>
     <div class="overlay-actions">
-      <button class="btn-overlay" id="finish-back">Torna alla bussola</button>
+      <button class="btn-overlay" id="finish-back">Torna al testo</button>
       <button class="btn-overlay" id="finish-restart">Ricomincia</button>
       <button class="btn-overlay primary" id="finish-next">
         Prossima chiave
@@ -862,673 +867,673 @@ button { font-family: inherit; }
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<div id="yt-frame"></div>
-
 <script>
-/* ============================================================
-   LA BUSSOLA — Cinque Chiavi per Rodari, Chiave 2
-   Single-file HTML, vanilla JS, YouTube IFrame API
-   ============================================================ */
+const PARAGRAPHS = [
+  { type: 'titolo', start: 0, end: 4, tokens: ['La macchina per fare i compiti'] },
+  { start: 4.5, end: 13.5, tokens: [
+    "Un giorno bussò alla nostra porta uno strano tipo: un ometto buffo vi dico, alto poco più di due ",
+    { gap: 'fiammiferi' }, ". Aveva in spalla una ", { gap: 'borsa' }, " più grande di lui."
+  ]},
+  { start: 14, end: 19, tokens: [
+    "«Ho qui delle ", { gap: 'macchine' }, " da vendere» disse. «Fate vedere» disse il babbo."
+  ]},
+  { start: 19.5, end: 36, tokens: [
+    "«Ecco, questa è una macchina per fare i compiti. Si schiaccia il bottoncino ",
+    { gap: 'rosso' }, " per fare i problemi, il bottoncino ",
+    { gap: 'giallo' }, " per svolgere i temi, il bottoncino ",
+    { gap: 'verde' }, " per imparare la geografia. La macchina fa tutto da sola in un minuto.»"
+  ]},
+  { start: 36.5, end: 47.5, tokens: [
+    "«Compramela, babbo!» dissi io. «Va bene, quanto volete?» «Non voglio ",
+    { gap: 'denari' }, "» disse l'omino. «Ma non lavorerete mica per pigliar caldo!»"
+  ]},
+  { start: 48, end: 56.5, tokens: [
+    "«No. Ma in cambio della macchina voglio il ", { gap: 'cervello' },
+    " del vostro bambino.» «Ma siete ", { gap: 'matto' }, "!» esclamò il babbo."
+  ]},
+  { start: 57, end: 77.5, tokens: [
+    "«State a sentire, signore» disse l'omino sorridendo. «Se i compiti glieli fa la macchina, a che cosa gli serve il cervello?» «Comprami la macchina, babbo!» implorai. «Che cosa ne faccio del cervello?» Il babbo mi guardò un poco e poi disse: «Va bene, prendete il suo cervello.»"
+  ]},
+  { start: 78, end: 93, tokens: [
+    "L'omino mi prese il cervello e se lo mise in una ", { gap: 'borsetta' },
+    ". Com'ero ", { gap: 'leggero' }, ", senza cervello! Tanto leggero che mi misi a ",
+    { gap: 'volare' }, " per la stanza, e se il babbo non mi avesse afferrato in tempo sarei volato giù dalla ",
+    { gap: 'finestra' }, "."
+  ]},
+  { start: 93.5, end: 109, tokens: [
+    "«Bisognerà tenerlo in ", { gap: 'gabbia' }, "» disse l'ometto. «Ma perché?» domandò il babbo. «Non ha più cervello, ecco perché. Se lo lasciate andare in giro volerà nei boschi come un ",
+    { gap: 'uccellino' }, " e in pochi giorni morirà di fame.»"
+  ]},
+  { start: 109.5, end: 124, tokens: [
+    "Il babbo mi rinchiuse in una gabbia, come un ", { gap: 'canarino' },
+    ". La gabbia era piccola, stretta, non mi potevo muovere. Le ", { gap: 'stecche' },
+    " mi stringevano tanto che... alla fine mi svegliai spaventato."
+  ]},
+  { start: 124.5, end: 133, tokens: [
+    "Meno male che era stato solo un ", { gap: 'sogno' },
+    "! Vi assicuro che mi sono subito messo a fare i ", { gap: 'compiti' }, "."
+  ]}
+];
 
 const VIDEO_ID = 'LhK_Kme3IFk';
 const MAX_ATTEMPTS = 3;
-const PROGRESS_KEY = 'mfc:rodari:progress';
-const LEVEL = 2;
 
-const CHIAVI_INFO = {
-  1: { name: 'La Lente',    url: 'https://la-macchina-per-fare-i-compiti.vercel.app/' },
-  2: { name: 'La Bussola',  url: '' },
-  3: { name: 'Lo Specchio', url: '' },
-  4: { name: 'Il Ponte',    url: '' },
-  5: { name: 'Il Taccuino', url: '' }
-};
-
-/* ----------- EPISODI ----------- */
-/* Per ogni episodio: l'audio è il frammento del video originale.
-   "center" è la direzione (N/E/S/O) che coglie il senso centrale.
-   Le altre 3 dicono cose vere ma laterali. */
-const EPISODES = [
-  {
-    title: "L'arrivo dell'ometto",
-    audioStart: 4.5, audioEnd: 13.5,
-    center: 'E',
-    cards: {
-      N: {
-        text: "Un ometto buffo e bizzarro arriva alla porta.",
-        feedback: "È vero — l'ometto è un personaggio strano. Ma stai descrivendo come <em>appare</em>, non cosa <em>porta</em>. Guarda meglio: cosa entra in casa insieme a lui?"
-      },
-      E: {
-        text: "Qualcuno entra in casa portando qualcosa che il bambino non si aspetta.",
-        feedback: "Sì. La favola non comincia davvero quando bussa la porta, ma quando entra <em>un'offerta</em>. Qualcosa di grande, dentro una borsa più grande dell'ometto stesso. Siamo all'inizio di una proposta."
-      },
-      S: {
-        text: "Bussano sempre in modo strano i personaggi delle favole.",
-        feedback: "È vero in generale, ma è un'osservazione sul <em>tipo</em> di storia, non su <em>questa</em> storia. Cosa accade qui in particolare?"
-      },
-      W: {
-        text: "L'omino ha una borsa più grande di lui.",
-        feedback: "Vero — il dettaglio della borsa è importante. Ma è un indizio: cosa ti suggerisce di guardare? Pensa a cosa potrebbe contenere."
-      }
-    }
-  },
-  {
-    title: "L'offerta della macchina",
-    audioStart: 14, audioEnd: 36,
-    center: 'N',
-    cards: {
-      N: {
-        text: "Viene proposta una macchina che fa tutti i compiti al posto del bambino.",
-        feedback: "Sì. Questo è il cuore della scena: una <em>scorciatoia</em>. Bottoncini colorati per problemi, temi, geografia — un minuto e tutto è fatto. La macchina toglie la fatica. È un'offerta che pesa, perché tocca qualcosa che riguarda davvero il bambino."
-      },
-      E: {
-        text: "L'omino è un venditore di oggetti moderni.",
-        feedback: "Sei vicino — è un venditore. Ma il punto non è <em>chi è</em>, è <em>cosa offre</em>. Cosa fa esattamente la sua macchina?"
-      },
-      S: {
-        text: "I bottoncini colorati rendono tutto più divertente.",
-        feedback: "Stai guardando i colori — rosso, giallo, verde. Ma sono dettagli di superficie. Cosa succede quando si schiaccia un bottoncino? Che cosa fa la macchina?"
-      },
-      W: {
-        text: "La macchina è velocissima: un minuto e ha finito.",
-        feedback: "La velocità è il dettaglio che colpisce — ma è una <em>qualità</em> della macchina. La domanda vera è: che cosa <em>fa</em> in quel minuto, e a chi è destinata?"
-      }
-    }
-  },
-  {
-    title: "Il prezzo: il cervello",
-    audioStart: 36.5, audioEnd: 77.5,
-    center: 'S',
-    cards: {
-      N: {
-        text: "L'omino non vuole soldi ma uno scambio strano.",
-        feedback: "Vero — l'omino rifiuta i denari. Ma stai descrivendo <em>cosa accade</em>, non cosa significa. Cosa chiede l'omino al posto dei soldi, e perché conta?"
-      },
-      E: {
-        text: "Il babbo è un genitore poco attento ad accettare.",
-        feedback: "È una lettura possibile, ma giudica un personaggio invece di guardare la scena. Il punto non è se il babbo abbia ragione o torto — è cosa viene messo sul tavolo dello scambio."
-      },
-      S: {
-        text: "Per ottenere la macchina, il bambino deve rinunciare a ciò che gli serve per pensare.",
-        feedback: "Sì. Qui sta tutto il senso dell'episodio. La scorciatoia ha un prezzo, e il prezzo non è denaro — è il <em>cervello</em>. Rodari ci sta dicendo che ogni scorciatoia chiede in cambio qualcosa che riguarda chi siamo."
-      },
-      W: {
-        text: "Il bambino insiste molto per avere la macchina.",
-        feedback: "Vero — il bambino la vuole. Ma il suo desiderio è la <em>reazione</em>, non il cuore della scena. Cosa l'omino propone in cambio?"
-      }
-    }
-  },
-  {
-    title: "Leggerezza e gabbia",
-    audioStart: 78, audioEnd: 124,
-    center: 'W',
-    cards: {
-      N: {
-        text: "Il bambino diventa leggerissimo e quasi vola via.",
-        feedback: "Vero — la leggerezza c'è. Ma è solo metà della scena. Cosa <em>succede</em> a quel bambino diventato leggero? Dove finisce?"
-      },
-      E: {
-        text: "L'omino spiega che senza cervello si muore di fame nei boschi.",
-        feedback: "È un dettaglio importante della spiegazione, ma è la <em>giustificazione</em> dell'omino. Il fatto centrale è cosa accade <em>davvero</em> al bambino — non cosa l'omino dice."
-      },
-      S: {
-        text: "Gli uccellini in gabbia non sono felici nelle storie.",
-        feedback: "Cogli l'immagine — la gabbia, l'uccellino — ma ti fermi al paragone. Rodari non sta parlando in generale degli uccellini: sta dicendo qualcosa di preciso su <em>questo</em> bambino."
-      },
-      W: {
-        text: "Senza il cervello, il bambino non è più libero: dev'essere chiuso in una gabbia.",
-        feedback: "Sì. Qui sta il rovesciamento di Rodari: la leggerezza sembrava libertà, ma diventa prigionia. Senza pensiero non si vola — si <em>deve</em> essere rinchiusi. La gabbia stretta, le stecche che stringono. È un incubo, e ha una direzione precisa."
-      }
-    }
-  },
-  {
-    title: "Il risveglio",
-    audioStart: 124.5, audioEnd: 133,
-    center: 'E',
-    cards: {
-      N: {
-        text: "Per fortuna era solo un brutto sogno.",
-        feedback: "È vero, è un sogno — ma è la <em>cornice</em>. Cosa fa il bambino subito dopo essersi svegliato? Quel gesto è il finale vero."
-      },
-      E: {
-        text: "Dopo l'incubo, il bambino corre a fare i compiti — ora sa perché ci servono.",
-        feedback: "Sì. Il finale non è il sollievo di essersi svegliato — è la <em>scelta</em> che il bambino fa dopo. I compiti diventano il modo per <em>tenersi il cervello</em>, per non finire in gabbia. La fatica non è più una punizione: è ciò che ci tiene liberi."
-      },
-      S: {
-        text: "I bambini buoni fanno i compiti quando i genitori dicono di farli.",
-        feedback: "È una lettura moralistica, ma non è quella di Rodari. Il bambino non corre a fare i compiti per <em>obbedienza</em>. Cosa lo spinge davvero, dopo quello che ha visto?"
-      },
-      W: {
-        text: "Anche gli incubi possono insegnare qualcosa.",
-        feedback: "È vero in generale, ma è una morale astratta. Il finale di Rodari è più preciso: il bambino fa <em>una cosa specifica</em>. Quale, e perché proprio quella?"
-      }
-    }
-  }
-];
-
-const DIR_NAMES = { N: 'Nord', E: 'Est', S: 'Sud', W: 'Ovest' };
-
-/* ----------- STATE ----------- */
 const state = {
   player: null,
   playerReady: false,
   isPlaying: false,
-  currentEpisode: 0,
-  episodes: EPISODES.map(() => ({
-    attempts: 0,
-    status: 'empty',    // empty | solved | helped | exhausted
-    wrongDirs: new Set()
-  })),
-  audioMonitor: null
+  duration: 133,
+  currentParaIdx: -1,
+  gaps: [],
+  syncInterval: null,
+  ss: {
+    typingBuffer: [],
+    forwardSeekCount: 0,
+    flagsRaised: new Set(),
+    blocked: false
+  }
 };
 
-/* ----------- HELPERS ----------- */
+function normalize(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim();
+}
+
 function formatTime(s) {
   if (!isFinite(s) || s < 0) s = 0;
   const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60).toString().padStart(2, '0');
-  return `${m}:${sec}`;
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
 function showToast(message, options) {
   options = options || {};
   const t = document.getElementById('toast');
   t.textContent = message;
-  t.className = 'toast show' + (options.miss ? ' miss' : '');
+  t.classList.toggle('miss', !!options.miss);
+  t.classList.add('show');
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => {
-    t.className = 'toast';
-  }, options.duration || 2000);
+    t.classList.remove('show');
+    setTimeout(() => t.classList.remove('miss'), 250);
+  }, options.duration || 2400);
 }
 
-/* ----------- PROGRESS (localStorage) ----------- */
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    return raw ? JSON.parse(raw) : { completed: [] };
-  } catch (e) {
-    return { completed: [] };
-  }
-}
+function buildCloze() {
+  const container = document.getElementById('cloze-content');
+  container.innerHTML = '';
+  state.gaps = [];
+  let gapIdx = 0;
 
-function saveProgress(p) {
-  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
-}
+  PARAGRAPHS.forEach((para, paraIdx) => {
+    const p = document.createElement('p');
+    p.dataset.paraIdx = paraIdx;
+    p.dataset.start = para.start;
+    p.dataset.end = para.end;
+    if (para.type === 'titolo') p.classList.add('titolo');
 
-function markLevelCompleted(level) {
-  const p = loadProgress();
-  if (!p.completed.includes(level)) {
-    p.completed.push(level);
-    saveProgress(p);
-  }
-  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
-  if (btn) btn.classList.add('completed');
-}
+    para.tokens.forEach(token => {
+      if (typeof token === 'string') {
+        p.appendChild(document.createTextNode(token));
+      } else if (token.gap) {
+        const gapId = `gap-${gapIdx}`;
+        const wrap = document.createElement('span');
+        wrap.className = 'gap';
+        wrap.id = gapId;
 
-function applyStoredProgress() {
-  const p = loadProgress();
-  p.completed.forEach(lvl => {
-    const btn = document.querySelector(`.chiave[data-level="${lvl}"]`);
-    if (btn) btn.classList.add('completed');
-  });
-}
-
-/* ----------- YOUTUBE PLAYER ----------- */
-function loadYouTubeAPI() {
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-}
-
-window.onYouTubeIframeAPIReady = function() {
-  state.player = new YT.Player('yt-frame', {
-    height: '1', width: '1', videoId: VIDEO_ID,
-    playerVars: { controls: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1 },
-    events: {
-      onReady: () => {
-        state.playerReady = true;
-        updateAudioInfo();
-      },
-      onStateChange: (e) => {
-        if (e.data === YT.PlayerState.PLAYING) {
-          state.isPlaying = true;
-          updatePlayIcon();
-          startAudioMonitor();
-        } else {
-          state.isPlaying = false;
-          updatePlayIcon();
-          stopAudioMonitor();
-          updateAudioInfo();
+        // chance dots indicator (sopra al gap)
+        const chances = document.createElement('span');
+        chances.className = 'gap-chances';
+        for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'gap-chance-dot';
+          chances.appendChild(dot);
         }
+        wrap.appendChild(chances);
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'gap-input';
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('autocapitalize', 'off');
+        input.setAttribute('spellcheck', 'false');
+        input.dataset.gapId = gapId;
+        input.maxLength = token.gap.length;
+        input.style.width = (token.gap.length * 11 + 22) + 'px';
+        input.placeholder = '____';
+
+        const tools = document.createElement('span');
+        tools.className = 'gap-tools';
+
+        // SUGGERIMENTO (lente) — mostra una lettera per volta
+        const hintBtn = document.createElement('button');
+        hintBtn.className = 'tool-btn hint';
+        hintBtn.title = 'Suggerimento (mostra una lettera)';
+        hintBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6.5"/><line x1="16" y1="16" x2="21" y2="21" stroke-linecap="round"/></svg>';
+        hintBtn.addEventListener('click', e => { e.preventDefault(); giveHint(gapId); });
+
+        // RIASCOLTA 5 SECONDI — sostituisce occhio
+        const replayBtn = document.createElement('button');
+        replayBtn.className = 'tool-btn replay';
+        replayBtn.title = 'Riascolta gli ultimi 5 secondi';
+        replayBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="14 17 8 12 14 7"/><polyline points="20 17 14 12 20 7"/></svg>';
+        replayBtn.addEventListener('click', e => { e.preventDefault(); replayLast5Seconds(gapId); });
+
+        tools.appendChild(hintBtn);
+        tools.appendChild(replayBtn);
+        wrap.appendChild(input);
+        wrap.appendChild(tools);
+
+        input.addEventListener('input', () => onInput(gapId));
+        input.addEventListener('focus', () => wrap.classList.add('focused'));
+        input.addEventListener('blur', () => wrap.classList.remove('focused'));
+        input.addEventListener('keydown', e => onKeydown(e));
+
+        state.gaps.push({
+          id: gapId,
+          paraIdx: paraIdx,
+          answer: token.gap,
+          status: 'empty', // empty | solved | helped | exhausted
+          hintLevel: 0,
+          attempts: 0,
+          el: wrap,
+          input: input,
+          chancesEl: chances
+        });
+
+        p.appendChild(wrap);
+        gapIdx++;
       }
-    }
+    });
+
+    container.appendChild(p);
   });
-};
 
-function startAudioMonitor() {
-  stopAudioMonitor();
-  state.audioMonitor = setInterval(() => {
-    if (!state.playerReady) return;
-    const t = state.player.getCurrentTime();
-    const ep = EPISODES[state.currentEpisode];
-    updateAudioInfo(t);
-    // Stop at episode end
-    if (t >= ep.audioEnd - 0.05) {
-      state.player.pauseVideo();
+  document.getElementById('stat-total').textContent = state.gaps.length;
+  updateProgress();
+}
+
+function onKeydown(e) {
+  if (e.key.length === 1) {
+    const now = Date.now();
+    state.ss.typingBuffer.push(now);
+    state.ss.typingBuffer = state.ss.typingBuffer.filter(t => now - t < 3000);
+    if (state.ss.typingBuffer.length >= 8) {
+      raiseFlag('compulsive-typing', 'Lampi di tastiera',
+        'Stai digitando in modo molto rapido. Le parole non sono al volo: ascolta e prendi il tempo che serve.');
+      state.ss.typingBuffer = [];
     }
-  }, 120);
-}
-
-function stopAudioMonitor() {
-  if (state.audioMonitor) {
-    clearInterval(state.audioMonitor);
-    state.audioMonitor = null;
   }
 }
 
-function updatePlayIcon() {
-  const ic = document.getElementById('play-icon');
-  if (state.isPlaying) {
-    ic.innerHTML = '<rect x="3" y="2" width="3" height="10"/><rect x="8" y="2" width="3" height="10"/>';
+function updateChanceDots(gap) {
+  const dots = gap.chancesEl.querySelectorAll('.gap-chance-dot');
+  const remaining = MAX_ATTEMPTS - gap.attempts;
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('spent', i >= remaining);
+  });
+  gap.el.classList.toggle('has-attempts', gap.attempts > 0 && gap.status !== 'solved' && gap.status !== 'exhausted');
+}
+
+function onInput(gapId) {
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap || gap.status === 'solved' || gap.status === 'exhausted') return;
+
+  // rimuovi stato wrong appena modifica (non più rosso ma ambra residuo)
+  gap.el.classList.remove('wrong');
+
+  const value = normalize(gap.input.value);
+  const target = normalize(gap.answer);
+
+  // valuta SOLO quando ha raggiunto la lunghezza della parola
+  if (value.length < target.length) return;
+
+  if (value === target) {
+    // CORRETTA
+    if (gap.hintLevel === 0 && gap.attempts === 0) {
+      gap.status = 'solved';
+      gap.el.classList.add('solved');
+    } else {
+      gap.status = 'helped';
+      gap.el.classList.add('helped', 'locked');
+    }
+    gap.input.value = gap.answer;
+    updateChanceDots(gap);
+    setTimeout(() => focusNextGap(gapId), 320);
+    updateProgress();
   } else {
-    ic.innerHTML = '<polygon points="3,2 12,7 3,12"/>';
-  }
-  const r = document.getElementById('replay-btn');
-  if (state.isPlaying) {
-    r.classList.add('playing');
-    document.getElementById('replay-label').textContent = 'Frammento in ascolto…';
-  } else {
-    r.classList.remove('playing');
-    document.getElementById('replay-label').textContent = 'Ascolta il frammento';
+    // SBAGLIATA — incrementa tentativo
+    gap.attempts++;
+    gap.input.classList.add('shake');
+    gap.el.classList.add('wrong');
+    setTimeout(() => gap.input.classList.remove('shake'), 450);
+    updateChanceDots(gap);
+
+    if (gap.attempts >= MAX_ATTEMPTS) {
+      // EXHAUSTED — scopri la parola dopo un breve respiro
+      setTimeout(() => {
+        gap.status = 'exhausted';
+        gap.input.value = gap.answer;
+        gap.el.classList.remove('wrong', 'helped');
+        gap.el.classList.add('exhausted');
+        showToast(`La parola era: «${gap.answer}». Andiamo avanti.`, { miss: true, duration: 2800 });
+        updateProgress();
+        setTimeout(() => focusNextGap(gapId), 600);
+      }, 550);
+    } else {
+      const remaining = MAX_ATTEMPTS - gap.attempts;
+      const message = remaining === 1
+        ? "Non è quella. Un'ultima prova, ascolta bene."
+        : `Non è quella. Ancora ${remaining} prove.`;
+      showToast(message, { duration: 1800 });
+    }
   }
 }
 
-function updateAudioInfo(currentT) {
-  const ep = EPISODES[state.currentEpisode];
-  const duration = ep.audioEnd - ep.audioStart;
-  const t = typeof currentT === 'number'
-    ? Math.max(0, Math.min(duration, currentT - ep.audioStart))
-    : 0;
-  document.getElementById('frag-time').textContent = `${formatTime(t)} / ${formatTime(duration)}`;
-  document.getElementById('frag-label').textContent = `Frammento · ${ep.title}`;
-  const pct = duration > 0 ? (t / duration) * 100 : 0;
-  document.getElementById('audio-fill').style.width = pct + '%';
+function giveHint(gapId) {
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap || gap.status === 'solved' || gap.status === 'exhausted') return;
+  gap.hintLevel = Math.min(gap.hintLevel + 1, gap.answer.length - 1);
+  // azzera lo stato wrong se presente
+  gap.el.classList.remove('wrong');
+  gap.input.value = gap.answer.substring(0, gap.hintLevel);
+  gap.el.classList.add('helped');
+  gap.input.focus();
+  setTimeout(() => {
+    gap.input.setSelectionRange(gap.input.value.length, gap.input.value.length);
+  }, 0);
 }
 
-function playFragment() {
+function replayLast5Seconds(gapId) {
   if (!state.playerReady) {
     showToast('Audio non ancora pronto, riprova.', { duration: 1800 });
     return;
   }
-  const ep = EPISODES[state.currentEpisode];
-  state.player.seekTo(ep.audioStart, true);
+  const gap = state.gaps.find(g => g.id === gapId);
+  if (!gap) return;
+  const para = PARAGRAPHS[gap.paraIdx];
+  const currentTime = state.player.getCurrentTime();
+  let target;
+
+  // se l'audio è già nel paragrafo del gap (o appena oltre), torna indietro 5s
+  // se è altrove (mai partito o lontano), salta all'inizio del paragrafo del gap
+  if (currentTime >= para.start - 1 && currentTime <= para.end + 3) {
+    target = Math.max(0, currentTime - 5);
+  } else {
+    target = Math.max(0, para.start - 0.3);
+  }
+
+  state.player.seekTo(target, true);
   state.player.playVideo();
+  gap.input.focus();
+}
+
+function focusNextGap(currentId) {
+  const idx = state.gaps.findIndex(g => g.id === currentId);
+  for (let i = idx + 1; i < state.gaps.length; i++) {
+    if (state.gaps[i].status !== 'solved' && state.gaps[i].status !== 'exhausted') {
+      state.gaps[i].input.focus();
+      return;
+    }
+  }
+}
+
+function updateProgress() {
+  const total = state.gaps.length;
+  let alone = 0, helped = 0, missed = 0;
+  state.gaps.forEach(g => {
+    if (g.status === 'solved') alone++;
+    else if (g.status === 'helped') helped++;
+    else if (g.status === 'exhausted') missed++;
+  });
+  const found = alone + helped + missed;
+  document.getElementById('stat-found').textContent = found;
+  document.getElementById('fill-green').style.width = (alone / total * 100) + '%';
+  document.getElementById('fill-amber').style.width = (helped / total * 100) + '%';
+  document.getElementById('fill-grey').style.width = (missed / total * 100) + '%';
+}
+
+function loadYouTubeAPI() {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.body.appendChild(tag);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  state.player = new YT.Player('yt-player', {
+    height: '1', width: '1', videoId: VIDEO_ID,
+    playerVars: { 'enablejsapi': 1, 'rel': 0, 'playsinline': 1, 'controls': 0, 'modestbranding': 1 },
+    events: {
+      'onReady': onPlayerReady,
+      'onStateChange': onPlayerStateChange,
+      'onError': onPlayerError
+    }
+  });
+};
+
+function onPlayerReady(event) {
+  state.playerReady = true;
+  if (state.player.getDuration) {
+    const d = state.player.getDuration();
+    if (d > 0) state.duration = d;
+  }
+  document.getElementById('audio-state').textContent = 'Pronto. Premi per ascoltare.';
+  document.getElementById('audio-time').textContent = `0:00 / ${formatTime(state.duration)}`;
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING) {
+    state.isPlaying = true;
+    setPlayIcon(false);
+    document.getElementById('audio-state').textContent = 'In ascolto...';
+    startSyncLoop();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    state.isPlaying = false;
+    setPlayIcon(true);
+    document.getElementById('audio-state').textContent = 'In pausa.';
+    stopSyncLoop();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    state.isPlaying = false;
+    setPlayIcon(true);
+    document.getElementById('audio-state').textContent = 'Ascolto terminato.';
+    stopSyncLoop();
+    document.querySelectorAll('.cloze-content p').forEach(el => el.classList.remove('active'));
+    state.currentParaIdx = -1;
+  }
+}
+
+function onPlayerError() {
+  document.getElementById('audio-state').textContent = 'Audio non disponibile';
+}
+
+function setPlayIcon(toPlay) {
+  const icon = document.getElementById('play-icon');
+  icon.innerHTML = toPlay
+    ? '<path d="M8 5v14l11-7z"/>'
+    : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
 }
 
 function togglePlay() {
   if (!state.playerReady) return;
-  if (state.isPlaying) {
-    state.player.pauseVideo();
-  } else {
-    playFragment();
+  if (state.isPlaying) state.player.pauseVideo();
+  else state.player.playVideo();
+}
+
+function startSyncLoop() {
+  if (state.syncInterval) clearInterval(state.syncInterval);
+  state.syncInterval = setInterval(() => {
+    if (!state.player || !state.player.getCurrentTime) return;
+    const t = state.player.getCurrentTime();
+    updatePlayerUI(t);
+    updateActiveParagraph(t);
+  }, 200);
+}
+
+function stopSyncLoop() {
+  if (state.syncInterval) {
+    clearInterval(state.syncInterval);
+    state.syncInterval = null;
   }
 }
 
-/* ----------- EPISODE RENDERING ----------- */
-function loadEpisode(idx) {
-  if (idx < 0 || idx >= EPISODES.length) return;
-  state.currentEpisode = idx;
-  const ep = EPISODES[idx];
-  const epState = state.episodes[idx];
+function updatePlayerUI(t) {
+  const pct = Math.min(100, (t / state.duration) * 100);
+  document.getElementById('scrubber-fill').style.width = pct + '%';
+  document.getElementById('scrubber-thumb').style.left = pct + '%';
+  document.getElementById('audio-time').textContent = `${formatTime(t)} / ${formatTime(state.duration)}`;
+}
 
-  document.getElementById('ep-counter').textContent = `Episodio ${idx + 1} di ${EPISODES.length}`;
-  document.getElementById('ep-title').textContent = ep.title;
-  document.getElementById('ep-prompt').textContent =
-    'Ascolta il frammento, poi scegli la direzione che secondo te punta al cuore di questo episodio.';
-
-  // Render the 4 cards in their fixed positions
-  document.querySelectorAll('.compass-card').forEach(card => {
-    const dir = card.dataset.dir;
-    const data = ep.cards[dir];
-    card.querySelector('.card-text').innerHTML = data.text;
-    card.className = 'compass-card';
-    card.dataset.dir = dir;
-
-    // Reapply state-based classes
-    if (epState.status === 'solved' && dir === ep.center) {
-      card.classList.add('solved');
-    } else if (epState.status === 'helped' && dir === ep.center) {
-      card.classList.add('helped');
-    } else if (epState.status === 'exhausted') {
-      if (dir === ep.center) {
-        card.classList.add('exhausted', 'was-correct');
-      } else {
-        card.classList.add('exhausted');
+function updateActiveParagraph(t) {
+  let activeIdx = -1;
+  for (let i = 0; i < PARAGRAPHS.length; i++) {
+    if (t >= PARAGRAPHS[i].start && t < PARAGRAPHS[i].end) {
+      activeIdx = i;
+      break;
+    }
+  }
+  if (activeIdx !== state.currentParaIdx) {
+    document.querySelectorAll('.cloze-content p').forEach((el, i) => {
+      el.classList.toggle('active', i === activeIdx);
+    });
+    state.currentParaIdx = activeIdx;
+    if (activeIdx >= 0) {
+      const activeEl = document.querySelector(`.cloze-content p[data-para-idx="${activeIdx}"]`);
+      const container = document.getElementById('cloze-content');
+      if (activeEl && container.scrollHeight > container.clientHeight) {
+        const rect = activeEl.getBoundingClientRect();
+        const cRect = container.getBoundingClientRect();
+        if (rect.top < cRect.top + 20 || rect.bottom > cRect.bottom - 20) {
+          activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
-    } else if (epState.wrongDirs.has(dir)) {
-      card.classList.add('wrong');
-    }
-  });
-
-  // Chance dots in the medallion
-  const dots = document.querySelectorAll('#medallion-chance-dots .cdot');
-  dots.forEach((d, i) => {
-    d.classList.toggle('used', i < epState.attempts);
-  });
-
-  // Medallion label
-  const mlbl = document.getElementById('medallion-attempts');
-  if (epState.status === 'solved') {
-    mlbl.textContent = 'Senso trovato';
-  } else if (epState.status === 'helped') {
-    mlbl.textContent = 'Senso trovato';
-  } else if (epState.status === 'exhausted') {
-    mlbl.textContent = 'Direzione rivelata';
-  } else {
-    mlbl.textContent = 'Trova il senso';
-  }
-
-  // Feedback band
-  renderFeedbackForState(idx);
-
-  // Update progress dots
-  updateProgress();
-
-  // Audio info refresh
-  updateAudioInfo();
-
-  // Auto-play the fragment when entering an unsolved episode
-  if (epState.status === 'empty' && state.playerReady) {
-    setTimeout(() => playFragment(), 200);
-  }
-}
-
-function renderFeedbackForState(idx) {
-  const ep = EPISODES[idx];
-  const epState = state.episodes[idx];
-  const band = document.getElementById('feedback-band');
-  const txt = document.getElementById('feedback-text');
-
-  // Reset
-  band.className = 'feedback-band';
-  // Remove any existing button
-  const existingBtn = band.querySelector('.feedback-next-btn');
-  if (existingBtn) existingBtn.remove();
-
-  if (epState.status === 'solved' || epState.status === 'helped') {
-    band.classList.add('solved');
-    txt.innerHTML = ep.cards[ep.center].feedback;
-    appendNextBtn(band, idx);
-  } else if (epState.status === 'exhausted') {
-    band.classList.add('exhausted');
-    txt.innerHTML = `La direzione era <strong>${DIR_NAMES[ep.center]}</strong>. ` + ep.cards[ep.center].feedback;
-    appendNextBtn(band, idx);
-  } else if (epState.attempts > 0) {
-    // Show last wrong feedback
-    band.classList.add('wrong');
-    const lastWrong = Array.from(epState.wrongDirs).pop();
-    txt.innerHTML = ep.cards[lastWrong].feedback;
-  } else {
-    band.classList.add('empty');
-    txt.innerHTML = 'Scegli una direzione per ricevere il primo orientamento.';
-  }
-}
-
-function appendNextBtn(band, idx) {
-  const btn = document.createElement('button');
-  btn.className = 'feedback-next-btn';
-  const isLast = idx === EPISODES.length - 1;
-  btn.innerHTML = isLast
-    ? `<span>Concludi la Bussola</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,8 7,12 13,4"/></svg>`
-    : `<span>Prossimo episodio</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/></svg>`;
-  btn.addEventListener('click', () => {
-    if (isLast) {
-      tryFinish();
-    } else {
-      loadEpisode(idx + 1);
-    }
-  });
-  band.appendChild(btn);
-}
-
-/* ----------- COMPASS INTERACTION ----------- */
-function onCardClick(dir) {
-  const idx = state.currentEpisode;
-  const ep = EPISODES[idx];
-  const epState = state.episodes[idx];
-
-  // Episode already concluded? Ignore.
-  if (epState.status !== 'empty') return;
-  // Already tried this direction? Ignore.
-  if (epState.wrongDirs.has(dir)) return;
-
-  const card = document.querySelector(`.compass-card[data-dir="${dir}"]`);
-
-  if (dir === ep.center) {
-    // Correct!
-    if (epState.attempts === 0) {
-      epState.status = 'solved';
-      card.classList.add('solved');
-    } else {
-      epState.status = 'helped';
-      card.classList.add('helped');
-    }
-    renderFeedbackForState(idx);
-    document.getElementById('medallion-attempts').textContent = 'Senso trovato';
-    updateProgress();
-    checkAllDone();
-  } else {
-    // Wrong direction
-    epState.wrongDirs.add(dir);
-    epState.attempts += 1;
-    card.classList.add('wrong');
-    // shake animation re-trigger
-    void card.offsetWidth;
-
-    // Update chance dots
-    const dots = document.querySelectorAll('#medallion-chance-dots .cdot');
-    if (dots[epState.attempts - 1]) dots[epState.attempts - 1].classList.add('used');
-
-    if (epState.attempts >= MAX_ATTEMPTS) {
-      // Reveal
-      setTimeout(() => {
-        epState.status = 'exhausted';
-        const correctCard = document.querySelector(`.compass-card[data-dir="${ep.center}"]`);
-        // Mark all cards as exhausted
-        document.querySelectorAll('.compass-card').forEach(c => {
-          c.classList.remove('wrong');
-          c.classList.add('exhausted');
-          if (c.dataset.dir === ep.center) c.classList.add('was-correct');
-        });
-        document.getElementById('medallion-attempts').textContent = 'Direzione rivelata';
-        renderFeedbackForState(idx);
-        updateProgress();
-        checkAllDone();
-      }, 600);
-    } else {
-      // Show feedback for this wrong direction
-      renderFeedbackForState(idx);
-      const remaining = MAX_ATTEMPTS - epState.attempts;
-      showToast(
-        remaining === 1
-          ? 'Un\'ultima direzione da provare.'
-          : `Riprova: hai ${remaining} altre prove.`,
-        { miss: true, duration: 2000 }
-      );
     }
   }
 }
 
-/* ----------- PROGRESS DOTS ----------- */
-function updateProgress() {
-  const container = document.getElementById('progress-dots');
-  container.innerHTML = '';
-  state.episodes.forEach(ep => {
-    const dot = document.createElement('span');
-    dot.className = 'dot';
-    if (ep.status === 'solved') dot.classList.add('solved');
-    else if (ep.status === 'helped') dot.classList.add('helped');
-    else if (ep.status === 'exhausted') dot.classList.add('exhausted');
-    container.appendChild(dot);
+function setupScrubber() {
+  const scrubber = document.getElementById('scrubber');
+  scrubber.addEventListener('click', e => {
+    if (!state.playerReady) return;
+    const rect = scrubber.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const newTime = pct * state.duration;
+    const currentTime = state.player.getCurrentTime();
+
+    if (newTime > currentTime + 4) {
+      state.ss.forwardSeekCount++;
+      if (state.ss.forwardSeekCount >= 2) {
+        raiseFlag('skip-passages', 'Salto dei passaggi',
+          'Hai saltato in avanti più volte nell\'audio. La favola va ascoltata, non scorsa: torna indietro e prendi il tempo.');
+        state.ss.forwardSeekCount = 0;
+      }
+    }
+
+    state.player.seekTo(newTime, true);
   });
-  const done = state.episodes.filter(e => e.status !== 'empty').length;
-  document.getElementById('progress-text').textContent = `${done}/${EPISODES.length}`;
 }
 
-function checkAllDone() {
-  const allDone = state.episodes.every(e => e.status !== 'empty');
-  document.getElementById('btn-finish').classList.toggle('visible', allDone);
+const SS_FLAGS = {
+  'compulsive-typing': {
+    label: 'Lampi di tastiera',
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 L3 14 L11 14 L9 22 L21 10 L13 10 Z"/></svg>'
+  },
+  'skip-passages': {
+    label: 'Salto dei passaggi',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 L9 11 L13 15 L21 7"/><polyline points="15 7 21 7 21 13"/></svg>'
+  }
+};
+
+function raiseFlag(type, label, message) {
+  if (state.ss.flagsRaised.has(type)) return;
+  state.ss.flagsRaised.add(type);
+
+  const config = SS_FLAGS[type];
+  const badge = document.createElement('div');
+  badge.className = 'ss-badge';
+  badge.dataset.type = type;
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'ss-badge-icon';
+  iconSpan.innerHTML = config.icon;
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = config.label;
+  const tooltip = document.createElement('div');
+  tooltip.className = 'ss-badge-tooltip';
+  tooltip.textContent = message;
+  badge.appendChild(iconSpan);
+  badge.appendChild(labelSpan);
+  badge.appendChild(tooltip);
+  document.getElementById('ss-badges').appendChild(badge);
+
+  if (state.ss.flagsRaised.size >= 2) {
+    setTimeout(() => showSSBlock(), 600);
+  }
 }
 
-/* ----------- FINISH OVERLAY ----------- */
+function showSSBlock() {
+  if (state.ss.blocked) return;
+  state.ss.blocked = true;
+  document.getElementById('ss-overlay').classList.add('open');
+  if (state.player && state.isPlaying) state.player.pauseVideo();
+
+  const btn = document.getElementById('ss-resume');
+  const cd = document.getElementById('ss-countdown');
+  btn.disabled = true;
+  let s = 10;
+  cd.textContent = `(${s})`;
+  const interval = setInterval(() => {
+    s--;
+    cd.textContent = s > 0 ? `(${s})` : '';
+    if (s <= 0) {
+      clearInterval(interval);
+      btn.disabled = false;
+    }
+  }, 1000);
+}
+
+function closeSSBlock() {
+  document.getElementById('ss-overlay').classList.remove('open');
+  state.ss.blocked = false;
+  state.ss.flagsRaised.clear();
+}
+
 function tryFinish() {
-  const allDone = state.episodes.every(e => e.status !== 'empty');
-  if (!allDone) {
-    const remaining = state.episodes.filter(e => e.status === 'empty').length;
-    showToast(`Ti restano ${remaining} episodi da attraversare.`, { miss: true, duration: 2200 });
-    return;
-  }
-  showFinishOverlay();
-}
-
-function showFinishOverlay() {
-  const alone = state.episodes.filter(e => e.status === 'solved').length;
-  const helped = state.episodes.filter(e => e.status === 'helped').length;
-  const missed = state.episodes.filter(e => e.status === 'exhausted').length;
-
+  let alone = 0, helped = 0, missed = 0, empty = 0;
+  state.gaps.forEach(g => {
+    if (g.status === 'solved') alone++;
+    else if (g.status === 'helped') helped++;
+    else if (g.status === 'exhausted') missed++;
+    else empty++;
+  });
   document.getElementById('m-alone').textContent = alone;
   document.getElementById('m-helped').textContent = helped;
   document.getElementById('m-missed').textContent = missed;
 
+  const total = state.gaps.length;
+  const found = alone + helped + missed;
   let title, body;
-  const total = EPISODES.length;
-  if (alone === total) {
-    title = 'Hai attraversato la Bussola da solo';
-    body = `Tutti e ${total} gli episodi colti al primo colpo. Hai un orecchio fine per il senso: la favola ti parla in chiaro.`;
+  if (empty > 0 && found === 0) {
+    title = 'Hai sfogliato senza fermarti';
+    body = `Sei arrivato in fondo senza ritrovare nessuna parola. La favola di Rodari non si svela così. Quando vuoi, ricomincia con calma.`;
+  } else if (empty > 0) {
+    title = 'Hai fatto un buon pezzo di strada';
+    body = `Hai lavorato su ${found} parole su ${total}. Le altre ${empty} ti aspettano: torna indietro a cercarle, oppure fermati qui — ognuno arriva fin dove riesce.`;
+  } else if (alone === total) {
+    title = 'Hai attraversato la prima chiave da solo';
+    body = `Tutte ${total} le parole ritrovate al primo colpo. Hai ascoltato bene, e il testo ora ti appartiene.`;
   } else if (missed === 0) {
-    title = 'Hai attraversato la Bussola';
-    body = `Tutti gli episodi orientati. ${alone} al primo colpo, ${helped} dopo qualche prova. Cercare la direzione giusta è già parte del leggere.`;
-  } else if (alone + helped > missed) {
-    title = 'Hai attraversato la Bussola';
-    body = `${alone} senso colto al volo, ${helped} con qualche prova, ${missed} rivelati dall'app. Le direzioni che non hai visto da solo, ora le conosci: sono parte di quello che la favola ti lascia in mano.`;
+    title = 'Hai attraversato la prima chiave';
+    body = `Tutte le parole ritrovate. ${alone} le hai prese al volo, ${helped} con qualche prova o suggerimento. Anche provare e correggere è leggere.`;
   } else {
-    title = 'Hai attraversato la Bussola';
-    body = `Molte direzioni sono state rivelate — fa niente, succede. Adesso però sai quali erano: rileggi la favola con questo orientamento e ti suonerà diversa.`;
+    title = 'Hai attraversato la prima chiave';
+    body = `${alone} parole le hai prese al volo, ${helped} dopo qualche prova. Per ${missed} non sei arrivato in tempo, ma ora sai quali erano: ascoltale di nuovo, ti aspettano.`;
   }
-
   document.getElementById('finish-title').textContent = title;
-  document.getElementById('finish-body').innerHTML = body;
+  document.getElementById('finish-body').textContent = body;
+
+  // Visibilità del bottone "Prossima chiave": solo se la Bussola è configurata
+  const nextBtn = document.getElementById('finish-next');
+  const nextLvl = LEVEL + 1;
+  const nextChiave = document.querySelector(`.chiave[data-level="${nextLvl}"]`);
+  const nextUrl = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  const canGoNext = nextChiave && !nextChiave.classList.contains('disabled') && nextUrl;
+  nextBtn.style.display = canGoNext ? '' : 'none';
+
   document.getElementById('finish-overlay').classList.add('open');
-  markLevelCompleted(LEVEL);
+  if (empty === 0) markLevelCompleted(1);
+}
+
+/* ============ PROGRESSO (in-session only, no persistence) ============
+   Nessuna memoria tra accessi: ogni page load parte da zero.
+   La spunta verde sulla chiave corrente appare solo a fine attività
+   e vive esclusivamente dentro la sessione del browser. */
+
+const CHIAVI_INFO = {
+  1: { name: 'La Lente',    url: '' },
+  2: { name: 'La Bussola',  url: 'bussola.html' },
+  3: { name: 'Lo Specchio', url: 'specchio.html' },
+  4: { name: 'Il Ponte',    url: '' },
+  5: { name: 'Il Taccuino', url: '' }
+};
+const LEVEL = 1;
+
+function markLevelCompleted(level) {
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) {
+    const wasCompleted = btn.classList.contains('completed');
+    btn.classList.add('completed');
+    if (!wasCompleted) {
+      btn.classList.add('celebrating');
+      setTimeout(() => btn.classList.remove('celebrating'), 800);
+    }
+  }
+}
+
+function goToNextChiave() {
+  const nextLvl = LEVEL + 1;
+  const url = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  if (url) {
+    closeFinishOverlay();
+    window.location.href = url;
+  }
 }
 
 function closeFinishOverlay() {
   document.getElementById('finish-overlay').classList.remove('open');
-  setTimeout(resetFinishOverlay, 250);
-}
-
-function resetFinishOverlay() {
-  document.querySelector('#finish-overlay .modal-stats').style.display = '';
-  document.getElementById('finish-restart').style.display = '';
-  document.getElementById('finish-next').style.display = '';
-  const back = document.getElementById('finish-back');
-  back.textContent = 'Torna alla bussola';
-  back.classList.remove('primary');
-}
-
-function goToNextChiave() {
-  const next = document.querySelector('.chiave[data-level="3"]');
-  if (next && !next.classList.contains('disabled')) {
-    closeFinishOverlay();
-    if (CHIAVI_INFO[3].url) window.location.href = CHIAVI_INFO[3].url;
-    return;
-  }
-  showBussolaConclusa();
-}
-
-function showBussolaConclusa() {
-  document.getElementById('finish-title').textContent = 'La Bussola è tua';
-  document.getElementById('finish-body').innerHTML =
-    'Hai chiuso il secondo passaggio. Tre chiavi ti aspettano — <em>Lo Specchio</em>, <em>Il Ponte</em>, <em>Il Taccuino</em> — ma sono ancora chiuse. Torneranno presto, una alla volta.';
-  document.querySelector('#finish-overlay .modal-stats').style.display = 'none';
-  document.getElementById('finish-restart').style.display = 'none';
-  document.getElementById('finish-next').style.display = 'none';
-  const back = document.getElementById('finish-back');
-  back.textContent = 'Concludi';
-  back.classList.add('primary');
 }
 
 function restartLevel() {
-  if (!confirm('Vuoi ricominciare la Bussola? Tutti gli orientamenti trovati verranno azzerati.')) return;
-  state.episodes = EPISODES.map(() => ({
-    attempts: 0, status: 'empty', wrongDirs: new Set()
-  }));
-  state.currentEpisode = 0;
-  document.getElementById('btn-finish').classList.remove('visible');
-  closeFinishOverlay();
-  loadEpisode(0);
+  if (!confirm('Vuoi ricominciare? Tutte le parole ritrovate e i segnali della Sala Studio verranno azzerati.')) return;
+  state.gaps.forEach(g => {
+    g.status = 'empty';
+    g.hintLevel = 0;
+    g.attempts = 0;
+    g.input.value = '';
+    g.el.classList.remove('solved', 'helped', 'exhausted', 'wrong', 'focused', 'locked', 'has-attempts');
+    updateChanceDots(g);
+  });
+  state.ss.flagsRaised.clear();
+  state.ss.typingBuffer = [];
+  state.ss.forwardSeekCount = 0;
+  document.getElementById('ss-badges').innerHTML = '';
   updateProgress();
+  closeFinishOverlay();
   if (state.player && state.playerReady) {
+    state.player.seekTo(0, true);
     state.player.pauseVideo();
   }
 }
 
-/* ----------- CHIAVE NAVIGATION ----------- */
-function onChiaveClick(btn) {
-  const lvl = parseInt(btn.dataset.level, 10);
-  if (lvl === LEVEL) return; // current — do nothing
-  if (btn.classList.contains('disabled')) {
-    showToast(`${CHIAVI_INFO[lvl].name} sarà disponibile presto`);
-    return;
-  }
-  const url = btn.dataset.url || CHIAVI_INFO[lvl].url;
-  if (url) {
-    window.location.href = url;
-  } else {
-    showToast(`${CHIAVI_INFO[lvl].name} non è ancora collegata`, { duration: 2000 });
-  }
-}
-
-/* ----------- INIT ----------- */
 document.addEventListener('DOMContentLoaded', () => {
+  buildCloze();
   loadYouTubeAPI();
-  applyStoredProgress();
-  loadEpisode(0);
-  updateProgress();
+  setupScrubber();
 
   document.getElementById('play-btn').addEventListener('click', togglePlay);
-  document.getElementById('replay-btn').addEventListener('click', () => {
-    if (state.isPlaying) {
-      state.player.pauseVideo();
-    } else {
-      playFragment();
-    }
-  });
   document.getElementById('btn-finish').addEventListener('click', tryFinish);
   document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
 
-  // Compass card click handlers
-  document.querySelectorAll('.compass-card').forEach(card => {
-    card.addEventListener('click', () => onCardClick(card.dataset.dir));
-  });
-
-  // Chiavi navigation
   document.querySelectorAll('.chiave').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      onChiaveClick(btn);
+      const lvl = parseInt(btn.dataset.level, 10);
+      if (lvl === LEVEL) return; // chiave corrente, ignora
+      if (btn.classList.contains('disabled')) {
+        const names = {2: 'La Bussola', 3: 'Lo Specchio', 4: 'Il Ponte', 5: 'Il Taccuino'};
+        showToast(`${names[lvl]} sarà disponibile presto`);
+        return;
+      }
+      const url = btn.dataset.url || (CHIAVI_INFO[lvl] && CHIAVI_INFO[lvl].url);
+      if (url) window.location.href = url;
     });
   });
 
-  // Overlay buttons
+  document.getElementById('ss-resume').addEventListener('click', closeSSBlock);
   document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
   document.getElementById('finish-restart').addEventListener('click', restartLevel);
   document.getElementById('finish-next').addEventListener('click', goToNextChiave);
 
-  // Spacebar = play/pause
   document.addEventListener('keydown', e => {
-    if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (e.key === ' ') { e.preventDefault(); togglePlay(); }
   });
 });
