@@ -315,7 +315,7 @@ button { font-family: inherit; }
 .feedback-band strong { font-weight: 600; }
 
 .feedback-meta {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px;
   font-family: 'DM Sans', sans-serif;
   font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.1em;
@@ -811,6 +811,18 @@ function renderFeedback() {
     content.innerHTML =
       `<div class="feedback-meta">Ponte centrato · ${fId} → ${oId}</div>` +
       CENTERED_FEEDBACK[fId];
+    // Bottone "Continua" per dare un'azione esplicita di chiusura del feedback
+    const actions = document.createElement('div');
+    actions.className = 'feedback-actions';
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'feedback-btn primary';
+    continueBtn.textContent = 'Continua con il prossimo ponte';
+    continueBtn.addEventListener('click', () => {
+      state.pendingFeedback = null;
+      renderAll();
+    });
+    actions.appendChild(continueBtn);
+    band.appendChild(actions);
   } else {
     band.classList.add('personal');
     const text = ALT_FEEDBACK[fId].replace('{OTHER}', oEl.title);
@@ -872,11 +884,14 @@ function renderAll() {
 
 /* ----------- INTERACTIONS ----------- */
 function onLeftClick(fId) {
-  // Se ho un feedback alternativo aperto, prima va deciso
-  if (state.pendingFeedback) {
+  // Solo i ponti ALTERNATIVI bloccano: serve una decisione esplicita
+  // ("Rivedo" / "Tengo"). I ponti centrati invece sono già conclusi e
+  // si possono lasciare cliccando direttamente un altro elemento.
+  if (state.pendingFeedback && !state.pendingFeedback.isCenter) {
     showToast('Decidi prima se rivedere o tenere il ponte precedente.', { duration: 2200 });
     return;
   }
+  state.pendingFeedback = null;
   // Se cliccato di nuovo lo stesso elemento, deseleziona
   if (state.selectedLeft === fId) {
     state.selectedLeft = null;
@@ -891,7 +906,7 @@ function onLeftClick(fId) {
 }
 
 function onRightClick(oId) {
-  if (state.pendingFeedback) {
+  if (state.pendingFeedback && !state.pendingFeedback.isCenter) {
     showToast('Decidi prima se rivedere o tenere il ponte precedente.', { duration: 2200 });
     return;
   }
@@ -899,6 +914,7 @@ function onRightClick(oId) {
     showToast('Tocca prima un elemento del 1973 a sinistra.', { duration: 2000 });
     return;
   }
+  state.pendingFeedback = null;
   // Se questo O è già usato da un altro F, libera quel ponte
   const usedBy = Object.entries(state.bridges).find(([, o]) => o === oId);
   if (usedBy && usedBy[0] !== state.selectedLeft) {
@@ -919,7 +935,7 @@ function tryFinish() {
     showToast(`Ti restano ${rem} ponti da costruire.`, { duration: 2200 });
     return;
   }
-  if (state.pendingFeedback) {
+  if (state.pendingFeedback && !state.pendingFeedback.isCenter) {
     showToast('Decidi prima sul ponte appena fatto: rivedere o tenere.', { duration: 2200 });
     return;
   }
