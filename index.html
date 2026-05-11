@@ -98,6 +98,22 @@ button { font-family: inherit; }
 .chiave.disabled { cursor: not-allowed; opacity: 0.45; }
 .chiave-icon { width: 22px; height: 22px; }
 .chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave { position: relative; }
+.chiave-done {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: none;
+  align-items: center; justify-content: center;
+}
+.chiave-done svg { width: 8px; height: 8px; color: white; }
+.chiave.completed .chiave-done { display: flex; }
+.chiave.completed:not(.active) {
+  color: var(--green-deep);
+  opacity: 1;
+}
 
 .right-block { display: flex; align-items: center; gap: 12px; }
 
@@ -711,6 +727,11 @@ button { font-family: inherit; }
           <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
         </svg>
         <span class="chiave-num">L1</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
       </button>
       <button class="chiave disabled" data-level="2" disabled title="La Bussola — in arrivo">
         <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -825,7 +846,14 @@ button { font-family: inherit; }
     </div>
     <div class="overlay-actions">
       <button class="btn-overlay" id="finish-back">Torna al testo</button>
-      <button class="btn-overlay primary" id="finish-restart">Ricomincia</button>
+      <button class="btn-overlay" id="finish-restart">Ricomincia</button>
+      <button class="btn-overlay primary" id="finish-next">
+        Prossima chiave
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: -2px;">
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <polyline points="9,4 13,8 9,12"/>
+        </svg>
+      </button>
     </div>
   </div>
 </div>
@@ -1393,6 +1421,62 @@ function tryFinish() {
   document.getElementById('finish-title').textContent = title;
   document.getElementById('finish-body').textContent = body;
   document.getElementById('finish-overlay').classList.add('open');
+  markLevelCompleted(1);
+}
+
+/* ============ PROGRESSO TRA CHIAVI ============ */
+const PROGRESS_KEY = 'mfc:rodari:progress';
+const CHIAVI_INFO = {
+  1: { name: 'La Lente' },
+  2: { name: 'La Bussola' },
+  3: { name: 'Lo Specchio' },
+  4: { name: 'Il Ponte' },
+  5: { name: 'Il Taccuino' }
+};
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : { completed: [] };
+  } catch (e) {
+    return { completed: [] };
+  }
+}
+
+function saveProgress(p) {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+}
+
+function markLevelCompleted(level) {
+  const p = loadProgress();
+  if (!p.completed.includes(level)) {
+    p.completed.push(level);
+    saveProgress(p);
+  }
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) btn.classList.add('completed');
+}
+
+function applyStoredProgress() {
+  const p = loadProgress();
+  p.completed.forEach(lvl => {
+    const btn = document.querySelector(`.chiave[data-level="${lvl}"]`);
+    if (btn) btn.classList.add('completed');
+  });
+}
+
+function goToNextChiave() {
+  // Cerca la prossima chiave non disabilitata dopo la L1
+  const next = document.querySelector('.chiave[data-level="2"]');
+  if (next && !next.classList.contains('disabled')) {
+    // Quando L2 sarà attiva: navigazione reale
+    next.click();
+    closeFinishOverlay();
+    return;
+  }
+  // L2 non ancora pronta: chiusura narrativa coerente
+  closeFinishOverlay();
+  showToast('La Bussola arriverà presto — per ora hai la Lente in mano.', { duration: 3200 });
 }
 
 function closeFinishOverlay() {
@@ -1425,6 +1509,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildCloze();
   loadYouTubeAPI();
   setupScrubber();
+  applyStoredProgress();
 
   document.getElementById('play-btn').addEventListener('click', togglePlay);
   document.getElementById('btn-finish').addEventListener('click', tryFinish);
@@ -1433,14 +1518,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.chiave.disabled').forEach(btn => {
     btn.addEventListener('click', () => {
       const num = btn.dataset.level;
-      const names = {2: 'La Bussola', 3: 'Lo Specchio', 4: 'Il Ponte', 5: 'Il Taccuino'};
-      showToast(`${names[num]} sarà disponibile presto`);
+      showToast(`${CHIAVI_INFO[num].name} sarà disponibile presto`);
     });
   });
 
   document.getElementById('ss-resume').addEventListener('click', closeSSBlock);
   document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
   document.getElementById('finish-restart').addEventListener('click', restartLevel);
+  document.getElementById('finish-next').addEventListener('click', goToNextChiave);
 
   document.addEventListener('keydown', e => {
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
