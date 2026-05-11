@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinque Chiavi per Rodari — Il Taccuino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1B6D3F;
+  --green-light: #2D8659;
+  --green-soft: #E8F1EC;
+  --green-deep: #134A2B;
+  --amber: #C4801A;
+  --amber-soft: #FBF1E0;
+  --amber-deep: #9C6515;
+  --blue: #2C5F8D;
+  --blue-soft: #E4ECF4;
+  --grey-deep: #5A5953;
+  --grey-mid: #8C8B85;
+  --grey-soft: #E5E1D6;
+  --grey-bg: #F5F2E9;
+  --bg: #FAF8F3;
+  --ink: #2A2A2A;
+  --ink-soft: #4A4A48;
+  --topbar-h: 72px;
+  --paper: #FBF9F2;
+  --paper-line: #DDD8C8;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+button, input, textarea { font-family: inherit; }
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ============ TOPBAR ============ */
+.topbar {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 50;
+  position: sticky; top: 0;
+}
+.brand { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-row1 {
+  font-family: 'Lora', serif; font-weight: 600; font-size: 17px;
+  color: var(--green-deep); letter-spacing: -0.01em;
+}
+.brand-row1 .accent { color: var(--amber); font-style: italic; font-weight: 500; }
+.brand-row2 {
+  font-size: 11px; color: var(--grey-mid);
+  letter-spacing: 0.05em; text-transform: uppercase; margin-top: 1px;
+}
+.chiavi-nav { display: flex; justify-content: center; align-items: center; gap: 6px; }
+.chiave {
+  background: transparent; border: 1.5px solid transparent; border-radius: 10px;
+  padding: 6px 10px; cursor: pointer; transition: all 0.15s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--grey-mid); min-width: 56px; position: relative; text-decoration: none;
+}
+.chiave:hover:not(.disabled):not(.active) { background: var(--grey-bg); }
+.chiave.active {
+  background: var(--green-soft); border-color: var(--green-light);
+  color: var(--green-deep); cursor: default;
+}
+.chiave.disabled { cursor: not-allowed; opacity: 0.45; }
+.chiave-icon { width: 22px; height: 22px; }
+.chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave-done {
+  position: absolute; top: 2px; right: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--green-light); display: none;
+  align-items: center; justify-content: center;
+}
+.chiave-done svg { width: 8px; height: 8px; color: white; }
+.chiave.completed .chiave-done { display: flex; }
+.chiave.completed:not(.active) { color: var(--green-deep); opacity: 1; }
+@keyframes chiave-celebra {
+  0% { transform: scale(1); } 40% { transform: scale(1.18); }
+  70% { transform: scale(0.96); } 100% { transform: scale(1); }
+}
+.chiave.celebrating .chiave-done { animation: chiave-celebra 0.7s ease-out; }
+.right-block { display: flex; align-items: center; gap: 12px; }
+.progress-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  background: var(--grey-bg); border-radius: 100px; font-size: 13px;
+  color: var(--grey-deep); font-weight: 500;
+}
+.progress-dots { display: inline-flex; gap: 4px; }
+.progress-dots .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--grey-soft); transition: background 0.2s;
+}
+.progress-dots .dot.filled { background: var(--green-light); }
+.icon-btn {
+  background: white; border: 1px solid var(--grey-soft); border-radius: 8px;
+  width: 36px; height: 36px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-deep); transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--grey-mid); background: var(--grey-bg); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .topbar { padding: 0 12px; gap: 12px; }
+  .brand-row1 { font-size: 14px; }
+  .brand-row2 { font-size: 10px; }
+  .chiave { min-width: 40px; padding: 4px 6px; }
+  .chiave-num { display: none; }
+  .chiave-icon { width: 20px; height: 20px; }
+  .progress-pill { display: none; }
+}
+
+/* ============ MAIN ============ */
+.taccuino-page {
+  flex: 1;
+  padding: 28px 24px 80px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+.page-intro {
+  margin-bottom: 28px;
+  padding: 18px 22px;
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 12px 12px 0;
+}
+.page-intro h1 {
+  font-family: 'Lora', serif; font-weight: 600;
+  font-size: 22px; color: var(--green-deep);
+  margin: 0 0 6px;
+}
+.page-intro p {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 15px; color: var(--ink-soft);
+  margin: 0; line-height: 1.55;
+}
+
+/* ============ TACCUINO PAGES ============ */
+.taccuino-page-wrap {
+  margin-bottom: 24px;
+}
+.taccuino-sheet {
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 24px 28px 26px;
+  box-shadow: 0 2px 8px rgba(60, 50, 30, 0.06);
+  position: relative;
+}
+.taccuino-sheet::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: linear-gradient(to bottom, var(--amber) 0%, var(--amber) 60%, transparent);
+  opacity: 0.5;
+  border-radius: 10px 0 0 10px;
+}
+
+.sheet-num {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--amber-deep);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.sheet-title {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--green-deep);
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+}
+.sheet-prompt {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--grey-deep);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.sheet-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px dashed var(--paper-line);
+  padding: 12px 0 14px;
+  font-family: 'Caveat', 'Lora', cursive;
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 70px;
+  overflow: hidden;
+}
+.sheet-input::placeholder {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--grey-mid);
+}
+.sheet-input:focus {
+  border-bottom-color: var(--green-light);
+}
+.sheet-counter {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--grey-mid);
+  text-align: right;
+  margin-top: 6px;
+  font-feature-settings: 'tnum';
+}
+.sheet-counter.over { color: var(--amber-deep); font-weight: 500; }
+
+/* ============ FAB FINISH ============ */
+.fab-finish {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--green); color: white;
+  border: none; border-radius: 100px;
+  padding: 12px 22px 12px 24px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.18s ease;
+  z-index: 30;
+  box-shadow: 0 4px 14px rgba(27, 109, 63, 0.25);
+  font-family: 'DM Sans', sans-serif;
+  opacity: 0; pointer-events: none; transform: translateY(8px);
+}
+.fab-finish.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.fab-finish:hover { background: var(--green-deep); }
+.fab-finish svg { width: 14px; height: 14px; }
+
+/* ============ OVERLAY ============ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(42, 42, 42, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease; padding: 24px;
+}
+.overlay.open { opacity: 1; pointer-events: auto; }
+.overlay-card {
+  background: white; border-radius: 18px;
+  padding: 32px 36px; max-width: 540px; width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+.overlay-card h2 {
+  margin: 0 0 8px; font-family: 'Lora', serif;
+  font-weight: 600; font-size: 26px;
+  color: var(--green-deep); letter-spacing: -0.01em;
+}
+.overlay-card .body {
+  font-size: 15px; color: var(--ink-soft);
+  margin: 0 0 22px; line-height: 1.6;
+}
+.icon-large { width: 56px; height: 56px; margin: 0 auto 12px; display: block; }
+
+.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-overlay {
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  padding: 10px 22px; border-radius: 100px;
+  border: 1px solid var(--grey-soft);
+  background: white; color: var(--ink);
+  cursor: pointer; transition: all 0.15s ease;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-overlay:hover { border-color: var(--grey-mid); }
+.btn-overlay.primary {
+  background: var(--green); border-color: var(--green);
+  color: white; font-weight: 600;
+}
+.btn-overlay.primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+.btn-overlay svg { width: 14px; height: 14px; }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed; bottom: 86px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: white;
+  padding: 12px 22px; border-radius: 100px;
+  font-size: 14px; font-weight: 500;
+  opacity: 0; pointer-events: none;
+  transition: all 0.22s ease;
+  z-index: 90; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============ PRINT LAYOUT ============
+   Stampa SOLO la versione "patto" pulita.
+   Stile A4 verticale con tre frasi grandi a mano e header del progetto. */
+.print-only { display: none; }
+@media print {
+  @page { size: A4 portrait; margin: 24mm 20mm 20mm; }
+  body { background: white; }
+  .topbar, .page-intro, .taccuino-page-wrap, .fab-finish, .overlay, .toast { display: none !important; }
+  .print-only { display: block !important; }
+  .app { min-height: auto; }
+}
+.print-sheet {
+  background: white;
+  padding: 0;
+  max-width: 170mm;
+  margin: 0 auto;
+  color: black;
+  font-family: 'Lora', serif;
+}
+.print-header {
+  text-align: center;
+  margin-bottom: 32mm;
+  padding-bottom: 10mm;
+  border-bottom: 1px solid #ccc;
+}
+.print-header-title {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 24pt;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: black;
+}
+.print-header-title .accent { color: #9C6515; font-style: italic; font-weight: 500; }
+.print-header-sub {
+  font-size: 11pt;
+  color: #555;
+  margin: 6pt 0 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.print-block {
+  margin-bottom: 18mm;
+  break-inside: avoid;
+}
+.print-block-num {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9pt;
+  letter-spacing: 0.18em;
+  color: #9C6515;
+  text-transform: uppercase;
+  margin-bottom: 2mm;
+}
+.print-block-title {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 14pt;
+  margin: 0 0 4mm;
+  color: black;
+}
+.print-block-text {
+  font-family: 'Caveat', 'Lora', cursive;
+  font-size: 22pt;
+  line-height: 1.35;
+  color: black;
+  padding: 2mm 0 4mm;
+  border-bottom: 1px dashed #999;
+  min-height: 14mm;
+}
+.print-footer {
+  margin-top: 18mm;
+  padding-top: 6mm;
+  border-top: 1px solid #ccc;
+  font-size: 9pt;
+  color: #777;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  font-style: italic;
+}
+.print-footer-date {
+  font-style: normal; margin-top: 3mm;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-row1">Cinque Chiavi per <span class="accent">Rodari</span></div>
+      <div class="brand-row2">La macchina per fare i compiti · Il Taccuino</div>
+    </div>
+    <nav class="chiavi-nav" aria-label="Cinque chiavi">
+      <a class="chiave" data-level="1" data-url="index.html" title="Livello 1 — La Lente">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="13" cy="13" r="7.5"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
+        </svg>
+        <span class="chiave-num">L1</span>
+      </a>
+      <a class="chiave" data-level="2" data-url="bussola.html" title="Livello 2 — La Bussola">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="16" cy="16" r="11"/>
+          <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="16" r="1.6" fill="white"/>
+        </svg>
+        <span class="chiave-num">L2</span>
+      </a>
+      <a class="chiave" data-level="3" data-url="specchio.html" title="Livello 3 — Lo Specchio">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="16" cy="16" rx="9" ry="11"/>
+          <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="chiave-num">L3</span>
+      </a>
+      <a class="chiave" data-level="4" data-url="ponte.html" title="Livello 4 — Il Ponte">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 22 Q 16 8, 28 22"/>
+          <line x1="4" y1="22" x2="28" y2="22"/>
+          <line x1="11" y1="22" x2="11" y2="16"/>
+          <line x1="16" y1="22" x2="16" y2="13"/>
+          <line x1="21" y1="22" x2="21" y2="16"/>
+        </svg>
+        <span class="chiave-num">L4</span>
+      </a>
+      <button class="chiave active" data-level="5" title="Livello 5 — Il Taccuino">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="7" y="5" width="18" height="22" rx="1"/>
+          <line x1="11" y1="11" x2="21" y2="11"/>
+          <line x1="11" y1="15" x2="21" y2="15"/>
+          <line x1="11" y1="19" x2="18" y2="19"/>
+        </svg>
+        <span class="chiave-num">L5</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
+      </button>
+    </nav>
+    <div class="right-block">
+      <div class="progress-pill" title="Pagine compilate">
+        <span id="progress-text">0/3</span>
+        <span class="progress-dots" id="progress-dots">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </span>
+      </div>
+      <button class="icon-btn" id="btn-restart-top" title="Cancella tutto">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7.5a5.5 5.5 0 1 1 1.6 3.9"/>
+          <polyline points="2 4 2 7.5 5.5 7.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="taccuino-page">
+    <div class="page-intro">
+      <h1>Il tuo taccuino</h1>
+      <p>Scrivi tre frasi. Non c'è giusto né sbagliato, non c'è voto. Sono le tue. Quando hai finito, puoi stamparle e attaccarle dove vuoi.</p>
+    </div>
+
+    <div class="taccuino-page-wrap">
+      <div class="taccuino-sheet">
+        <div class="sheet-num">Pagina 1 di 3</div>
+        <h2 class="sheet-title">La mia regola con i compiti</h2>
+        <p class="sheet-prompt">Scrivi una frase breve sul tuo rapporto personale con la fatica dei compiti. Cosa ti dici quando sono difficili? Cosa decidi di fare? Una sola frase, quella vera.</p>
+        <textarea class="sheet-input" id="input-1" rows="2" maxlength="180" placeholder="«Quando un compito mi sembra troppo, io…»" aria-label="La mia regola con i compiti"></textarea>
+        <div class="sheet-counter" id="counter-1">0 / 180</div>
+      </div>
+    </div>
+
+    <div class="taccuino-page-wrap">
+      <div class="taccuino-sheet">
+        <div class="sheet-num">Pagina 2 di 3</div>
+        <h2 class="sheet-title">La mia regola con l'IA</h2>
+        <p class="sheet-prompt">Quando usi un'intelligenza artificiale (ChatGPT o simili), quando non la usi, e perché. Una frase, la tua.</p>
+        <textarea class="sheet-input" id="input-2" rows="2" maxlength="180" placeholder="«Uso l'IA quando… ma non la uso mai per…»" aria-label="La mia regola con l'IA"></textarea>
+        <div class="sheet-counter" id="counter-2">0 / 180</div>
+      </div>
+    </div>
+
+    <div class="taccuino-page-wrap">
+      <div class="taccuino-sheet">
+        <div class="sheet-num">Pagina 3 di 3</div>
+        <h2 class="sheet-title">Il mio patto con me stesso</h2>
+        <p class="sheet-prompt">Una sola frase — un manifesto, una promessa, un appunto — che vuoi tenere a mente la prossima volta che ti sembra di sentire bussare l'ometto venditore.</p>
+        <textarea class="sheet-input" id="input-3" rows="2" maxlength="180" placeholder="«Io, davanti a una scorciatoia, voglio ricordarmi che…»" aria-label="Il mio patto con me stesso"></textarea>
+        <div class="sheet-counter" id="counter-3">0 / 180</div>
+      </div>
+    </div>
+
+    <button class="fab-finish" id="btn-finish">
+      <span>Concludi il Taccuino</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3,8 7,12 13,4"/>
+      </svg>
+    </button>
+  </main>
+</div>
+
+<!-- ============ VERSIONE STAMPABILE (visibile solo in print) ============ -->
+<div class="print-only">
+  <div class="print-sheet">
+    <div class="print-header">
+      <h1 class="print-header-title">Cinque Chiavi per <span class="accent">Rodari</span></h1>
+      <p class="print-header-sub">Il mio Taccuino · La macchina per fare i compiti</p>
+    </div>
+
+    <div class="print-block">
+      <div class="print-block-num">Pagina 1</div>
+      <h2 class="print-block-title">La mia regola con i compiti</h2>
+      <div class="print-block-text" id="print-1"></div>
+    </div>
+
+    <div class="print-block">
+      <div class="print-block-num">Pagina 2</div>
+      <h2 class="print-block-title">La mia regola con l'IA</h2>
+      <div class="print-block-text" id="print-2"></div>
+    </div>
+
+    <div class="print-block">
+      <div class="print-block-num">Pagina 3</div>
+      <h2 class="print-block-title">Il mio patto con me stesso</h2>
+      <div class="print-block-text" id="print-3"></div>
+    </div>
+
+    <div class="print-footer">
+      Scritto da me · Cinque Chiavi per Rodari
+      <div class="print-footer-date" id="print-date"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="finish-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
+      <rect x="10" y="6" width="28" height="36" rx="2"/>
+      <line x1="16" y1="14" x2="32" y2="14"/>
+      <line x1="16" y1="22" x2="32" y2="22"/>
+      <line x1="16" y1="30" x2="28" y2="30"/>
+    </svg>
+    <h2 id="finish-title">Il tuo Taccuino è scritto</h2>
+    <p class="body" id="finish-body"></p>
+    <div class="overlay-actions">
+      <button class="btn-overlay" id="finish-back">Torna a rileggere</button>
+      <button class="btn-overlay primary" id="finish-print">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 6 4 2 12 2 12 6"/>
+          <rect x="2" y="6" width="12" height="7" rx="1"/>
+          <rect x="4" y="9" width="8" height="4"/>
+        </svg>
+        Stampa il mio Taccuino
+      </button>
+    </div>
+    <div style="margin-top: 14px;">
+      <button class="btn-overlay" id="finish-restart" style="font-size: 12px; color: var(--grey-mid); border-color: transparent;">Ricomincia da capo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   IL TACCUINO — Cinque Chiavi per Rodari, Chiave 5
+   Tre pagine bianche dove lo studente scrive il proprio patto.
+   Output: stampa via window.print() (zero dipendenze).
+   Niente persistenza: ogni accesso parte da zero.
+   ============================================================ */
+
+const LEVEL = 5;
+const CHIAVI_INFO = {
+  1: { name: 'La Lente',    url: 'index.html' },
+  2: { name: 'La Bussola',  url: 'bussola.html' },
+  3: { name: 'Lo Specchio', url: 'specchio.html' },
+  4: { name: 'Il Ponte',    url: 'ponte.html' },
+  5: { name: 'Il Taccuino', url: '' }
+};
+
+const MIN_CHARS = 15;
+const MAX_CHARS = 180;
+
+/* ----------- HELPERS ----------- */
+function showToast(message, options) {
+  options = options || {};
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = 'toast show';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { t.className = 'toast'; }, options.duration || 2000);
+}
+
+function markLevelCompleted(level) {
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) {
+    const wasCompleted = btn.classList.contains('completed');
+    btn.classList.add('completed');
+    if (!wasCompleted) {
+      btn.classList.add('celebrating');
+      setTimeout(() => btn.classList.remove('celebrating'), 800);
+    }
+  }
+}
+
+/* ----------- INPUTS ----------- */
+function autoGrow(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function updateCounter(idx) {
+  const input = document.getElementById('input-' + idx);
+  const counter = document.getElementById('counter-' + idx);
+  const len = input.value.length;
+  counter.textContent = `${len} / ${MAX_CHARS}`;
+  counter.classList.toggle('over', len > MAX_CHARS - 20);
+  autoGrow(input);
+  updateProgress();
+}
+
+function getFilledCount() {
+  let n = 0;
+  for (let i = 1; i <= 3; i++) {
+    const v = document.getElementById('input-' + i).value.trim();
+    if (v.length >= MIN_CHARS) n++;
+  }
+  return n;
+}
+
+function updateProgress() {
+  const dots = document.querySelectorAll('#progress-dots .dot');
+  let filled = 0;
+  for (let i = 1; i <= 3; i++) {
+    const v = document.getElementById('input-' + i).value.trim();
+    if (v.length >= MIN_CHARS) {
+      dots[i-1].classList.add('filled');
+      filled++;
+    } else {
+      dots[i-1].classList.remove('filled');
+    }
+  }
+  document.getElementById('progress-text').textContent = `${filled}/3`;
+  document.getElementById('btn-finish').classList.toggle('visible', filled === 3);
+}
+
+/* ----------- FINISH ----------- */
+function tryFinish() {
+  if (getFilledCount() < 3) {
+    const rem = 3 - getFilledCount();
+    showToast(`Ti restano ${rem} ${rem === 1 ? 'pagina' : 'pagine'} da scrivere (almeno ${MIN_CHARS} caratteri ciascuna).`, { duration: 2400 });
+    return;
+  }
+  showFinishOverlay();
+}
+
+function showFinishOverlay() {
+  document.getElementById('finish-body').innerHTML =
+    'Tre frasi scritte da te. Adesso puoi stamparle e attaccarle dove vuoi: sopra la scrivania, dentro il diario, sulla porta della cameretta. Quando senti bussare l\'ometto venditore, sai dove guardare.';
+  document.getElementById('finish-overlay').classList.add('open');
+  markLevelCompleted(LEVEL);
+}
+
+function closeFinishOverlay() {
+  document.getElementById('finish-overlay').classList.remove('open');
+}
+
+function printTaccuino() {
+  // Copia il testo degli input nelle aree di stampa
+  for (let i = 1; i <= 3; i++) {
+    const v = document.getElementById('input-' + i).value.trim();
+    document.getElementById('print-' + i).textContent = v;
+  }
+  // Data
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const yyyy = today.getFullYear();
+  document.getElementById('print-date').textContent = `${dd}/${mm}/${yyyy}`;
+  // Stampa
+  closeFinishOverlay();
+  setTimeout(() => window.print(), 200);
+}
+
+function restartLevel() {
+  if (!confirm('Vuoi cancellare quello che hai scritto e ricominciare da capo?')) return;
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('input-' + i).value = '';
+    updateCounter(i);
+  }
+  closeFinishOverlay();
+  updateProgress();
+  document.getElementById('input-1').focus();
+}
+
+/* ----------- CHIAVE NAVIGATION ----------- */
+function onChiaveClick(btn) {
+  const lvl = parseInt(btn.dataset.level, 10);
+  if (lvl === LEVEL) return;
+  if (btn.classList.contains('disabled')) {
+    showToast(`${CHIAVI_INFO[lvl].name} sarà disponibile presto`);
+    return;
+  }
+  const url = btn.dataset.url || CHIAVI_INFO[lvl].url;
+  if (url) {
+    // Avviso se hai scritto qualcosa
+    const hasContent = getFilledCount() > 0;
+    if (hasContent && !confirm('Hai iniziato a scrivere nel Taccuino. Se cambi chiave, il testo andrà perso. Continui?')) return;
+    window.location.href = url;
+  }
+}
+
+/* ----------- INIT ----------- */
+document.addEventListener('DOMContentLoaded', () => {
+  for (let i = 1; i <= 3; i++) {
+    const input = document.getElementById('input-' + i);
+    input.addEventListener('input', () => updateCounter(i));
+    autoGrow(input);
+  }
+  updateProgress();
+
+  document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
+  document.getElementById('btn-finish').addEventListener('click', tryFinish);
+
+  document.querySelectorAll('.chiave').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      onChiaveClick(btn);
+    });
+  });
+
+  document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
+  document.getElementById('finish-restart').addEventListener('click', restartLevel);
+  document.getElementById('finish-print').addEventListener('click', printTaccuino);
+
+  // Focus prima area
+  document.getElementById('input-1').focus();
+});
+</script>
+
+</body>
+</html>

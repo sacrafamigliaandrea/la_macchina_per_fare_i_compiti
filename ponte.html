@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinque Chiavi per Rodari — Il Ponte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1B6D3F;
+  --green-light: #2D8659;
+  --green-soft: #E8F1EC;
+  --green-deep: #134A2B;
+  --amber: #C4801A;
+  --amber-soft: #FBF1E0;
+  --amber-deep: #9C6515;
+  --blue: #2C5F8D;
+  --blue-soft: #E4ECF4;
+  --grey-deep: #5A5953;
+  --grey-mid: #8C8B85;
+  --grey-soft: #E5E1D6;
+  --grey-bg: #F5F2E9;
+  --bg: #FAF8F3;
+  --ink: #2A2A2A;
+  --ink-soft: #4A4A48;
+  --topbar-h: 72px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+button { font-family: inherit; }
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ============ TOPBAR (identica alle altre chiavi) ============ */
+.topbar {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--grey-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+  z-index: 50;
+  position: sticky; top: 0;
+}
+.brand { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-row1 {
+  font-family: 'Lora', serif; font-weight: 600; font-size: 17px;
+  color: var(--green-deep); letter-spacing: -0.01em;
+}
+.brand-row1 .accent { color: var(--amber); font-style: italic; font-weight: 500; }
+.brand-row2 {
+  font-size: 11px; color: var(--grey-mid);
+  letter-spacing: 0.05em; text-transform: uppercase; margin-top: 1px;
+}
+.chiavi-nav { display: flex; justify-content: center; align-items: center; gap: 6px; }
+.chiave {
+  background: transparent; border: 1.5px solid transparent; border-radius: 10px;
+  padding: 6px 10px; cursor: pointer; transition: all 0.15s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--grey-mid); min-width: 56px; position: relative; text-decoration: none;
+}
+.chiave:hover:not(.disabled):not(.active) { background: var(--grey-bg); }
+.chiave.active {
+  background: var(--green-soft); border-color: var(--green-light);
+  color: var(--green-deep); cursor: default;
+}
+.chiave.disabled { cursor: not-allowed; opacity: 0.45; }
+.chiave-icon { width: 22px; height: 22px; }
+.chiave-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; line-height: 1; }
+.chiave-done {
+  position: absolute; top: 2px; right: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--green-light); display: none;
+  align-items: center; justify-content: center;
+}
+.chiave-done svg { width: 8px; height: 8px; color: white; }
+.chiave.completed .chiave-done { display: flex; }
+.chiave.completed:not(.active) { color: var(--green-deep); opacity: 1; }
+@keyframes chiave-celebra {
+  0% { transform: scale(1); } 40% { transform: scale(1.18); }
+  70% { transform: scale(0.96); } 100% { transform: scale(1); }
+}
+.chiave.celebrating .chiave-done { animation: chiave-celebra 0.7s ease-out; }
+.right-block { display: flex; align-items: center; gap: 12px; }
+.progress-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  background: var(--grey-bg); border-radius: 100px; font-size: 13px;
+  color: var(--grey-deep); font-weight: 500;
+}
+.progress-dots { display: inline-flex; gap: 4px; }
+.progress-dots .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--grey-soft); transition: background 0.2s;
+}
+.progress-dots .dot.centered { background: var(--green-light); }
+.progress-dots .dot.personal { background: var(--blue); }
+.icon-btn {
+  background: white; border: 1px solid var(--grey-soft); border-radius: 8px;
+  width: 36px; height: 36px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--grey-deep); transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--grey-mid); background: var(--grey-bg); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .topbar { padding: 0 12px; gap: 12px; }
+  .brand-row1 { font-size: 14px; }
+  .brand-row2 { font-size: 10px; }
+  .chiave { min-width: 40px; padding: 4px 6px; }
+  .chiave-num { display: none; }
+  .chiave-icon { width: 20px; height: 20px; }
+  .progress-pill { display: none; }
+}
+
+/* ============ MAIN ============ */
+.ponte-page {
+  flex: 1;
+  padding: 24px 24px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.page-header { margin-bottom: 16px; }
+.page-title {
+  font-family: 'Lora', serif; font-weight: 600;
+  font-size: 24px; color: var(--green-deep);
+  letter-spacing: -0.01em; margin: 0 0 6px;
+}
+.page-prompt {
+  font-size: 14px; color: var(--grey-deep);
+  margin: 0; max-width: 820px;
+}
+
+/* ============ BRIDGE BOARD ============ */
+.bridge-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 180px 1fr;
+  gap: 0;
+  margin-top: 16px;
+}
+@media (max-width: 880px) {
+  .bridge-board { grid-template-columns: 1fr 100px 1fr; }
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2;
+  position: relative;
+}
+.column-label {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 13px; color: var(--grey-mid);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.column.left .column-label { text-align: right; padding-right: 8px; }
+.column.right .column-label { text-align: left; padding-left: 8px; }
+
+.elem-card {
+  background: white;
+  border: 1.5px solid var(--grey-soft);
+  border-radius: 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  user-select: none;
+  position: relative;
+}
+.elem-card:hover:not(.bridged) {
+  border-color: var(--green-light);
+  background: #FCFCF8;
+}
+.elem-card.selected {
+  border-color: var(--green);
+  background: var(--green-soft);
+  box-shadow: 0 0 0 3px rgba(27, 109, 63, 0.12);
+}
+.elem-card.bridged {
+  border-color: var(--green-light);
+  background: var(--green-soft);
+}
+.elem-card.bridged.personal {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+.elem-card.dimmed { opacity: 0.45; }
+.column.left .elem-card { flex-direction: row; }
+.column.right .elem-card { flex-direction: row-reverse; text-align: right; }
+.elem-tag {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--grey-bg);
+  color: var(--grey-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px;
+  letter-spacing: 0.04em;
+  transition: all 0.18s;
+}
+.elem-card.bridged .elem-tag {
+  background: var(--green-light); color: white;
+}
+.elem-card.bridged.personal .elem-tag {
+  background: var(--blue); color: white;
+}
+.elem-card.selected .elem-tag {
+  background: var(--green); color: white;
+}
+.elem-body { flex: 1; }
+.elem-title {
+  font-weight: 600; font-size: 13.5px; color: var(--ink);
+  line-height: 1.3; margin-bottom: 2px;
+}
+.elem-desc {
+  font-size: 12px; color: var(--grey-deep);
+  line-height: 1.4;
+  font-family: 'Lora', serif;
+  font-style: italic;
+}
+
+/* SVG overlay for bridge lines */
+.bridges-svg {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 24px);
+  pointer-events: none;
+  z-index: 1;
+}
+.bridge-line {
+  fill: none;
+  stroke: var(--green-light);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.7;
+  transition: opacity 0.3s, stroke 0.3s;
+}
+.bridge-line.personal { stroke: var(--blue); }
+.bridge-line.highlight { stroke-width: 3; opacity: 1; }
+
+/* Center divider */
+.bridge-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 32px;
+  z-index: 2;
+}
+.bridge-center-icon {
+  width: 36px; height: 36px;
+  opacity: 0.4;
+  color: var(--grey-mid);
+}
+
+/* ============ FEEDBACK BAND ============ */
+.feedback-band {
+  margin-top: 22px;
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-height: 80px;
+  transition: all 0.3s ease;
+  font-family: 'Lora', serif;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.feedback-band.empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--grey-mid);
+  font-style: italic;
+  text-align: center;
+}
+.feedback-band.centered {
+  border-color: var(--green-light);
+  background: var(--green-soft);
+  color: var(--green-deep);
+  border-left: 3px solid var(--green);
+}
+.feedback-band.personal {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: #1F3D5E;
+  border-left: 3px solid var(--blue);
+}
+.feedback-band em { color: var(--amber-deep); font-style: italic; font-weight: 500; }
+.feedback-band strong { font-weight: 600; }
+
+.feedback-meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.feedback-actions {
+  margin-top: 12px;
+  display: flex; gap: 8px;
+}
+.feedback-btn {
+  font-family: 'DM Sans', sans-serif;
+  background: white;
+  border: 1px solid var(--grey-soft);
+  color: var(--ink);
+  font-size: 13px; font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.feedback-btn:hover { border-color: var(--grey-mid); }
+.feedback-btn.primary {
+  background: var(--green); color: white; border-color: var(--green);
+  font-weight: 600;
+}
+.feedback-btn.primary:hover { background: var(--green-deep); }
+
+/* ============ FAB FINISH ============ */
+.fab-finish {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--green); color: white;
+  border: none; border-radius: 100px;
+  padding: 12px 22px 12px 24px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.18s ease;
+  z-index: 30;
+  box-shadow: 0 4px 14px rgba(27, 109, 63, 0.25);
+  font-family: 'DM Sans', sans-serif;
+  opacity: 0; pointer-events: none; transform: translateY(8px);
+}
+.fab-finish.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.fab-finish:hover { background: var(--green-deep); }
+.fab-finish svg { width: 14px; height: 14px; }
+
+/* ============ OVERLAY ============ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(42, 42, 42, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease; padding: 24px;
+}
+.overlay.open { opacity: 1; pointer-events: auto; }
+.overlay-card {
+  background: white; border-radius: 18px;
+  padding: 32px 36px; max-width: 560px; width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+.overlay-card h2 {
+  margin: 0 0 8px; font-family: 'Lora', serif;
+  font-weight: 600; font-size: 26px;
+  color: var(--green-deep); letter-spacing: -0.01em;
+}
+.overlay-card .body {
+  font-size: 15px; color: var(--ink-soft);
+  margin: 0 0 22px; line-height: 1.6;
+}
+.icon-large { width: 56px; height: 56px; margin: 0 auto 12px; display: block; }
+.modal-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 12px; margin: 18px 0 22px;
+}
+.modal-stat {
+  background: var(--grey-bg); border-radius: 12px;
+  padding: 14px 8px;
+}
+.modal-stat .num {
+  font-size: 28px; font-weight: 700;
+  color: var(--ink); font-feature-settings: 'tnum';
+  display: block;
+}
+.modal-stat .lbl {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--grey-mid);
+  margin-top: 4px; display: block; line-height: 1.3;
+}
+.modal-stat.centered .num { color: var(--green-light); }
+.modal-stat.personal .num { color: var(--blue); }
+
+.overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-overlay {
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  padding: 10px 22px; border-radius: 100px;
+  border: 1px solid var(--grey-soft);
+  background: white; color: var(--ink);
+  cursor: pointer; transition: all 0.15s ease;
+}
+.btn-overlay:hover { border-color: var(--grey-mid); }
+.btn-overlay.primary {
+  background: var(--green); border-color: var(--green);
+  color: white; font-weight: 600;
+}
+.btn-overlay.primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed; bottom: 86px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: white;
+  padding: 12px 22px; border-radius: 100px;
+  font-size: 14px; font-weight: 500;
+  opacity: 0; pointer-events: none;
+  transition: all 0.22s ease;
+  z-index: 90; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 880px) {
+  .bridge-board {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .bridge-center { display: none; }
+  .bridges-svg { display: none; }
+  .column.left .elem-card { flex-direction: row; }
+  .column.right .elem-card { flex-direction: row; text-align: left; }
+  .column-label { text-align: center !important; padding: 0 !important; }
+  .elem-title { font-size: 13px; }
+  .elem-desc { font-size: 11.5px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-row1">Cinque Chiavi per <span class="accent">Rodari</span></div>
+      <div class="brand-row2">La macchina per fare i compiti · Il Ponte</div>
+    </div>
+    <nav class="chiavi-nav" aria-label="Cinque chiavi">
+      <a class="chiave" data-level="1" data-url="index.html" title="Livello 1 — La Lente">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="13" cy="13" r="7.5"/>
+          <line x1="18.5" y1="18.5" x2="25" y2="25" stroke-linecap="round"/>
+        </svg>
+        <span class="chiave-num">L1</span>
+      </a>
+      <a class="chiave" data-level="2" data-url="bussola.html" title="Livello 2 — La Bussola">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="16" cy="16" r="11"/>
+          <polygon points="16,8 19,16 16,24 13,16" fill="currentColor" stroke="none"/>
+          <circle cx="16" cy="16" r="1.6" fill="white"/>
+        </svg>
+        <span class="chiave-num">L2</span>
+      </a>
+      <a class="chiave" data-level="3" data-url="specchio.html" title="Livello 3 — Lo Specchio">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="16" cy="16" rx="9" ry="11"/>
+          <line x1="7" y1="16" x2="25" y2="16" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="chiave-num">L3</span>
+      </a>
+      <button class="chiave active" data-level="4" title="Livello 4 — Il Ponte">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 22 Q 16 8, 28 22"/>
+          <line x1="4" y1="22" x2="28" y2="22"/>
+          <line x1="11" y1="22" x2="11" y2="16"/>
+          <line x1="16" y1="22" x2="16" y2="13"/>
+          <line x1="21" y1="22" x2="21" y2="16"/>
+        </svg>
+        <span class="chiave-num">L4</span>
+        <span class="chiave-done" aria-label="Attraversata">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2.5,6.5 5,9 9.5,3.5"/>
+          </svg>
+        </span>
+      </button>
+      <button class="chiave disabled" data-level="5" disabled title="Il Taccuino — in arrivo">
+        <svg class="chiave-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="7" y="5" width="18" height="22" rx="1"/>
+          <line x1="11" y1="11" x2="21" y2="11"/>
+          <line x1="11" y1="15" x2="21" y2="15"/>
+          <line x1="11" y1="19" x2="18" y2="19"/>
+        </svg>
+        <span class="chiave-num">L5</span>
+      </button>
+    </nav>
+    <div class="right-block">
+      <div class="progress-pill" title="Ponti costruiti">
+        <span id="progress-text">0/6</span>
+        <span class="progress-dots" id="progress-dots"></span>
+      </div>
+      <button class="icon-btn" id="btn-restart-top" title="Ricomincia">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7.5a5.5 5.5 0 1 1 1.6 3.9"/>
+          <polyline points="2 4 2 7.5 5.5 7.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="ponte-page">
+    <div class="page-header">
+      <h1 class="page-title">Costruisci sei ponti tra il 1973 e oggi</h1>
+      <p class="page-prompt">Per ogni elemento della favola di Rodari (a sinistra), scegli a quale realtà di oggi (a destra) lo collegheresti. Tocca prima l'elemento di sinistra, poi quello di destra. Ogni ponte è la tua lettura: non c'è una risposta unica.</p>
+    </div>
+
+    <div class="bridge-board" id="bridge-board">
+      <svg class="bridges-svg" id="bridges-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+
+      <div class="column left">
+        <div class="column-label">1973 · la favola</div>
+        <div id="col-left"></div>
+      </div>
+
+      <div class="bridge-center">
+        <svg class="bridge-center-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 44 Q 32 16, 58 44"/>
+          <line x1="6" y1="44" x2="58" y2="44"/>
+          <line x1="20" y1="44" x2="20" y2="34"/>
+          <line x1="32" y1="44" x2="32" y2="28"/>
+          <line x1="44" y1="44" x2="44" y2="34"/>
+        </svg>
+      </div>
+
+      <div class="column right">
+        <div class="column-label">oggi · 2026</div>
+        <div id="col-right"></div>
+      </div>
+    </div>
+
+    <div class="feedback-band empty" id="feedback-band">
+      <span id="feedback-content">Tocca un elemento a sinistra, poi uno a destra, per costruire il primo ponte.</span>
+    </div>
+
+    <button class="fab-finish" id="btn-finish">
+      <span>Concludi il Ponte</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="8" x2="13" y2="8"/>
+        <polyline points="9,4 13,8 9,12"/>
+      </svg>
+    </button>
+  </main>
+</div>
+
+<div class="overlay" id="finish-overlay">
+  <div class="overlay-card">
+    <svg class="icon-large" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--green-light);">
+      <path d="M6 34 Q 24 12, 42 34"/>
+      <line x1="6" y1="34" x2="42" y2="34"/>
+      <line x1="14" y1="34" x2="14" y2="26"/>
+      <line x1="24" y1="34" x2="24" y2="20"/>
+      <line x1="34" y1="34" x2="34" y2="26"/>
+    </svg>
+    <h2 id="finish-title">Hai attraversato il Ponte</h2>
+    <p class="body" id="finish-body"></p>
+    <div class="modal-stats">
+      <div class="modal-stat centered"><span class="num" id="m-centered">0</span><span class="lbl">Ponti centrati</span></div>
+      <div class="modal-stat personal"><span class="num" id="m-personal">0</span><span class="lbl">Tue letture</span></div>
+    </div>
+    <div class="overlay-actions">
+      <button class="btn-overlay" id="finish-back">Torna ai ponti</button>
+      <button class="btn-overlay" id="finish-restart">Ricomincia</button>
+      <button class="btn-overlay primary" id="finish-next">
+        Prossima chiave
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: -2px;">
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <polyline points="9,4 13,8 9,12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   IL PONTE — Cinque Chiavi per Rodari, Chiave 4
+   Sei elementi del 1973 da collegare a sei realtà del 2026.
+   Niente persistenza: ogni accesso parte da zero.
+   ============================================================ */
+
+const LEVEL = 4;
+const CHIAVI_INFO = {
+  1: { name: 'La Lente',    url: 'index.html' },
+  2: { name: 'La Bussola',  url: 'bussola.html' },
+  3: { name: 'Lo Specchio', url: 'specchio.html' },
+  4: { name: 'Il Ponte',    url: '' },
+  5: { name: 'Il Taccuino', url: 'taccuino.html' }
+};
+
+/* ----------- DATI ----------- */
+const LEFT_ELEMS = [
+  { id: 'F1', title: 'La macchina per fare i compiti', desc: 'Promette di fare tutti i compiti in un minuto.' },
+  { id: 'F2', title: "L'ometto venditore",            desc: "Bussa alla porta con un'offerta troppo bella per essere vera." },
+  { id: 'F3', title: 'La borsa più grande di lui',    desc: 'Nasconde la macchina: pesa più di quello che si vede.' },
+  { id: 'F4', title: 'Il cervello in borsetta',       desc: 'Ciò che il bambino dà via in cambio della macchina.' },
+  { id: 'F5', title: 'La leggerezza che vola',        desc: 'Senza cervello, vola da una stanza all\'altra: sembra libero.' },
+  { id: 'F6', title: 'La gabbia stretta',             desc: 'Dove dev\'essere rinchiuso, per non perdersi nei boschi.' }
+];
+
+/* Ordine sulla colonna destra MESCOLATO rispetto ai ponti centrali.
+   Mappa ID → centrale partner */
+const CENTERED_PAIRS = {
+  F1: 'O1', F2: 'O2', F3: 'O3', F4: 'O4', F5: 'O5', F6: 'O6'
+};
+
+const RIGHT_ELEMS = [
+  { id: 'O5', title: 'Lo scrolling infinito',          desc: 'Reel, video, feed: chi decide cosa ti fa scorrere?' },
+  { id: 'O3', title: 'Le app "gratis" (che gratis non sono)', desc: "Sembrano regali: dentro c'è uno scambio nascosto." },
+  { id: 'O1', title: 'ChatGPT e le IA che fanno i compiti',   desc: 'Scrivono temi, fanno riassunti, risolvono problemi in pochi secondi.' },
+  { id: 'O6', title: 'La dipendenza dagli schermi',    desc: 'Il telefono come guinzaglio: sembra tu a tenerlo, è lui a tenerti.' },
+  { id: 'O4', title: 'I nostri dati personali',        desc: 'Foto, abitudini, posizioni: tutto ciò che cediamo senza accorgercene.' },
+  { id: 'O2', title: 'Le grandi aziende tecnologiche', desc: 'Chi vende gli strumenti che cambiano la vita di ogni giorno.' }
+];
+
+/* Feedback "centrato": per ogni F → O centrale */
+const CENTERED_FEEDBACK = {
+  F1: "Hai collegato la macchina che fa i compiti a <strong>ChatGPT</strong>. È la connessione più diretta della favola: Rodari ha immaginato la nostra IA molto prima che esistesse. La differenza? La sua era un giocattolo con bottoncini. La nostra parla, scrive, risponde, sembra una persona. Ma fa la stessa cosa: i compiti <em>al posto</em> del bambino. <strong>Domanda:</strong> cosa cambia quando una macchina non sembra più una macchina?",
+  F2: "L'ometto venditore di Rodari è oggi una <strong>grande azienda tecnologica</strong>. Non bussa alla porta — sta sempre lì, nel telefono di tasca. E quello che vende non costa cento lire: costa qualcosa di meno visibile. Il suo sorriso, però, è lo stesso. Sembra dirti: «Fidati, è per il tuo bene.» <strong>Domanda:</strong> cosa cambia, se chi vende è gentile?",
+  F3: "La borsa che nasconde la macchina è oggi un'icona colorata sull'home screen: <strong>un'app che sembra gratis</strong>. Sembra leggera, perfetta, innocua. Dentro ha qualcosa che non ti hanno mostrato all'inizio: dati, pubblicità, profilazione, dipendenza progettata. Rodari aveva ragione: quello che è dentro la borsa pesa più di quello che si vede. <strong>Domanda:</strong> prima di scaricare un'app, ti chiedi mai cosa c'è nella sua borsa?",
+  F4: "Il cervello in borsetta di Rodari sono oggi i <strong>tuoi dati personali</strong>. Non te li chiedono in modo così esplicito — l'omino che dice «voglio il cervello del bambino» farebbe scappare chiunque. Le aziende oggi sono più astute: ti chiedono solo un click su «Accetto». E lì dentro c'è scritto che cedi le tue foto, le tue abitudini, i tuoi gusti, le tue paure. Sono il tuo cervello, riscritto in righe di codice. <strong>Domanda:</strong> chi ha la tua borsetta?",
+  F5: "La leggerezza del bambino senza cervello — che volava da una stanza all'altra senza fermarsi — è oggi lo <strong>scrolling infinito</strong>. Reel dopo reel dopo reel, senza decidere dove andare. Sembra libertà: scegli tu cosa guardare. In realtà chi sceglie è l'algoritmo, e tu sei trascinato. Rodari l'aveva capito quarant'anni prima: che la leggerezza, quella vera, fa cadere giù dalla finestra. <strong>Domanda:</strong> dopo mezz'ora di scroll, ti senti più leggero o più stordito?",
+  F6: "La gabbia di Rodari era stretta, fatta di stecche. La gabbia di oggi è luminosa, sta in tasca, vibra ogni dieci minuti: è la <strong>dipendenza dagli schermi</strong>. Non hai bisogno di essere rinchiuso — sei tu che la apri di continuo, e non riesci a chiuderla per più di dieci minuti. Il bambino della favola, in fondo, era sfortunato: la sua gabbia era visibile. La tua è invisibile, e per questo molto più difficile da riconoscere. <strong>Domanda:</strong> quando è stata l'ultima volta che sei rimasto un'ora senza guardare il telefono?"
+};
+
+/* Feedback "alternativo": ponti che non sono quelli centrali.
+   Il template usa {OTHER} che verrà sostituito col titolo dell'elemento scelto. */
+const ALT_FEEDBACK = {
+  F1: "Hai collegato la macchina a <em>{OTHER}</em>. È una connessione che ha senso — la macchina di Rodari assomiglia a molte cose, oggi. Però c'è qualcosa di più diretto: una tecnologia che, come lei, sa fare <strong>i compiti</strong> al posto tuo, in pochi secondi. Vuoi rivedere questo ponte, o tenere la tua lettura?",
+  F2: "Hai collegato l'omino venditore a <em>{OTHER}</em>. È una lettura interessante. Però l'omino aveva una caratteristica precisa: era un <strong>venditore</strong>. Bussava alla porta per vendere qualcosa. Oggi, chi sono i grandi venditori di scorciatoie digitali? Vuoi rivedere, o tenere?",
+  F3: "Hai collegato la borsa a <em>{OTHER}</em>. Possibile — la borsa è un oggetto carico. Però la sua caratteristica più importante è che <strong>nasconde</strong>: dentro c'era qualcosa che il babbo non vedeva. Cosa, oggi, ti viene presentato come «gratis» o «innocuo» ma dentro contiene qualcos'altro? Vuoi rivedere, o tenere?",
+  F4: "Hai collegato il cervello in borsetta a <em>{OTHER}</em>. È un'associazione possibile. Però il cervello, nella favola, era quello che il bambino <strong>cedeva</strong> per ottenere la macchina. Era il prezzo silenzioso. Oggi, cosa ti viene chiesto come prezzo silenzioso, ogni volta che apri un'app? Vuoi rivedere, o tenere?",
+  F5: "Hai collegato la leggerezza a <em>{OTHER}</em>. C'è qualcosa di vero. Però quella leggerezza era una <strong>sensazione di libertà che ti porta dove non hai deciso tu</strong>: il bambino volava da una stanza all'altra senza scegliere. Quale tecnologia oggi ti dà esattamente questa sensazione di trascinamento? Vuoi rivedere, o tenere?",
+  F6: "Hai collegato la gabbia a <em>{OTHER}</em>. È possibile. Però la gabbia era ciò <strong>in cui finiva</strong> il bambino: la conseguenza di aver ceduto il cervello. Era il risultato. Oggi, qual è la conseguenza più tipica di aver ceduto attenzione e dati alle macchine? Vuoi rivedere, o tenere?"
+};
+
+/* ----------- STATE ----------- */
+const state = {
+  bridges: {},        // F_id -> O_id
+  selectedLeft: null, // F_id
+  pendingFeedback: null // { fId, oId, isCenter }
+};
+
+/* ----------- HELPERS ----------- */
+function showToast(message, options) {
+  options = options || {};
+  const t = document.getElementById('toast');
+  t.textContent = message;
+  t.className = 'toast show';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { t.className = 'toast'; }, options.duration || 2000);
+}
+
+function markLevelCompleted(level) {
+  const btn = document.querySelector(`.chiave[data-level="${level}"]`);
+  if (btn) {
+    const wasCompleted = btn.classList.contains('completed');
+    btn.classList.add('completed');
+    if (!wasCompleted) {
+      btn.classList.add('celebrating');
+      setTimeout(() => btn.classList.remove('celebrating'), 800);
+    }
+  }
+}
+
+function findRightById(id) { return RIGHT_ELEMS.find(e => e.id === id); }
+function findLeftById(id)  { return LEFT_ELEMS.find(e => e.id === id); }
+
+/* ----------- RENDER ----------- */
+function renderColumns() {
+  const left = document.getElementById('col-left');
+  const right = document.getElementById('col-right');
+  left.innerHTML = '';
+  right.innerHTML = '';
+
+  LEFT_ELEMS.forEach(el => {
+    const card = document.createElement('div');
+    card.className = 'elem-card';
+    card.dataset.id = el.id;
+    card.dataset.side = 'left';
+    const bridgedTo = state.bridges[el.id];
+    if (state.selectedLeft === el.id) card.classList.add('selected');
+    if (bridgedTo) {
+      card.classList.add('bridged');
+      if (CENTERED_PAIRS[el.id] !== bridgedTo) card.classList.add('personal');
+    }
+    card.innerHTML = `
+      <div class="elem-tag">${el.id}</div>
+      <div class="elem-body">
+        <div class="elem-title">${el.title}</div>
+        <div class="elem-desc">${el.desc}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => onLeftClick(el.id));
+    left.appendChild(card);
+  });
+
+  RIGHT_ELEMS.forEach(el => {
+    const card = document.createElement('div');
+    card.className = 'elem-card';
+    card.dataset.id = el.id;
+    card.dataset.side = 'right';
+    const bridgedFrom = Object.entries(state.bridges).find(([, oid]) => oid === el.id);
+    if (bridgedFrom) {
+      card.classList.add('bridged');
+      const fId = bridgedFrom[0];
+      if (CENTERED_PAIRS[fId] !== el.id) card.classList.add('personal');
+    }
+    // Dim right cards already used when selecting a different left
+    if (state.selectedLeft && bridgedFrom && bridgedFrom[0] !== state.selectedLeft) {
+      card.classList.add('dimmed');
+    }
+    card.innerHTML = `
+      <div class="elem-tag">${el.id}</div>
+      <div class="elem-body">
+        <div class="elem-title">${el.title}</div>
+        <div class="elem-desc">${el.desc}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => onRightClick(el.id));
+    right.appendChild(card);
+  });
+}
+
+function drawBridges() {
+  const svg = document.getElementById('bridges-svg');
+  const board = document.getElementById('bridge-board');
+  if (!board || !svg) return;
+  svg.innerHTML = '';
+  const boardRect = board.getBoundingClientRect();
+  svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
+
+  Object.entries(state.bridges).forEach(([fId, oId]) => {
+    const leftCard = document.querySelector(`.elem-card[data-side="left"][data-id="${fId}"]`);
+    const rightCard = document.querySelector(`.elem-card[data-side="right"][data-id="${oId}"]`);
+    if (!leftCard || !rightCard) return;
+    const lr = leftCard.getBoundingClientRect();
+    const rr = rightCard.getBoundingClientRect();
+    const x1 = lr.right - boardRect.left;
+    const y1 = lr.top + lr.height / 2 - boardRect.top;
+    const x2 = rr.left - boardRect.left;
+    const y2 = rr.top + rr.height / 2 - boardRect.top;
+    const cx = (x1 + x2) / 2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const isPersonal = CENTERED_PAIRS[fId] !== oId;
+    path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${y1 - 12}, ${cx} ${(y1+y2)/2} T ${x2} ${y2}`);
+    path.setAttribute('class', 'bridge-line' + (isPersonal ? ' personal' : ''));
+    svg.appendChild(path);
+  });
+}
+
+function renderFeedback() {
+  const band = document.getElementById('feedback-band');
+  const content = document.getElementById('feedback-content');
+  band.className = 'feedback-band';
+  // Remove any action buttons
+  const oldActions = band.querySelector('.feedback-actions');
+  if (oldActions) oldActions.remove();
+
+  if (!state.pendingFeedback) {
+    if (Object.keys(state.bridges).length === 0) {
+      band.classList.add('empty');
+      content.innerHTML = 'Tocca un elemento a sinistra, poi uno a destra, per costruire il primo ponte.';
+    } else {
+      const done = Object.keys(state.bridges).length;
+      const tot = LEFT_ELEMS.length;
+      if (done === tot) {
+        band.classList.add('empty');
+        content.innerHTML = 'Hai costruito tutti i sei ponti. Puoi rivederli toccando gli elementi, oppure concludere.';
+      } else {
+        band.classList.add('empty');
+        content.innerHTML = `Hai costruito ${done} ponti su ${tot}. Continua scegliendo un altro elemento a sinistra.`;
+      }
+    }
+    return;
+  }
+
+  const { fId, oId, isCenter } = state.pendingFeedback;
+  const fEl = findLeftById(fId);
+  const oEl = findRightById(oId);
+
+  if (isCenter) {
+    band.classList.add('centered');
+    content.innerHTML =
+      `<div class="feedback-meta">Ponte centrato · ${fId} → ${oId}</div>` +
+      CENTERED_FEEDBACK[fId];
+  } else {
+    band.classList.add('personal');
+    const text = ALT_FEEDBACK[fId].replace('{OTHER}', oEl.title);
+    content.innerHTML =
+      `<div class="feedback-meta">Tua lettura · ${fId} → ${oId}</div>` +
+      text;
+    // Action: rivedere o tenere
+    const actions = document.createElement('div');
+    actions.className = 'feedback-actions';
+    const reviseBtn = document.createElement('button');
+    reviseBtn.className = 'feedback-btn primary';
+    reviseBtn.textContent = 'Rivedo il ponte';
+    reviseBtn.addEventListener('click', () => {
+      delete state.bridges[fId];
+      state.selectedLeft = fId;
+      state.pendingFeedback = null;
+      renderAll();
+    });
+    const keepBtn = document.createElement('button');
+    keepBtn.className = 'feedback-btn';
+    keepBtn.textContent = 'Tengo la mia lettura';
+    keepBtn.addEventListener('click', () => {
+      state.pendingFeedback = null;
+      renderAll();
+    });
+    actions.appendChild(reviseBtn);
+    actions.appendChild(keepBtn);
+    band.appendChild(actions);
+  }
+}
+
+function updateProgress() {
+  const container = document.getElementById('progress-dots');
+  container.innerHTML = '';
+  LEFT_ELEMS.forEach(el => {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    const bridged = state.bridges[el.id];
+    if (bridged) {
+      if (CENTERED_PAIRS[el.id] === bridged) dot.classList.add('centered');
+      else dot.classList.add('personal');
+    }
+    container.appendChild(dot);
+  });
+  const done = Object.keys(state.bridges).length;
+  document.getElementById('progress-text').textContent = `${done}/${LEFT_ELEMS.length}`;
+
+  // Mostra FAB quando tutti i ponti sono costruiti
+  const allDone = done === LEFT_ELEMS.length;
+  document.getElementById('btn-finish').classList.toggle('visible', allDone);
+}
+
+function renderAll() {
+  renderColumns();
+  drawBridges();
+  renderFeedback();
+  updateProgress();
+}
+
+/* ----------- INTERACTIONS ----------- */
+function onLeftClick(fId) {
+  // Se ho un feedback alternativo aperto, prima va deciso
+  if (state.pendingFeedback) {
+    showToast('Decidi prima se rivedere o tenere il ponte precedente.', { duration: 2200 });
+    return;
+  }
+  // Se cliccato di nuovo lo stesso elemento, deseleziona
+  if (state.selectedLeft === fId) {
+    state.selectedLeft = null;
+  } else {
+    state.selectedLeft = fId;
+    // Se l'elemento ha già un ponte, lo rompiamo per fargliene fare un altro
+    if (state.bridges[fId]) {
+      delete state.bridges[fId];
+    }
+  }
+  renderAll();
+}
+
+function onRightClick(oId) {
+  if (state.pendingFeedback) {
+    showToast('Decidi prima se rivedere o tenere il ponte precedente.', { duration: 2200 });
+    return;
+  }
+  if (!state.selectedLeft) {
+    showToast('Tocca prima un elemento del 1973 a sinistra.', { duration: 2000 });
+    return;
+  }
+  // Se questo O è già usato da un altro F, libera quel ponte
+  const usedBy = Object.entries(state.bridges).find(([, o]) => o === oId);
+  if (usedBy && usedBy[0] !== state.selectedLeft) {
+    delete state.bridges[usedBy[0]];
+  }
+  const fId = state.selectedLeft;
+  state.bridges[fId] = oId;
+  state.selectedLeft = null;
+  const isCenter = CENTERED_PAIRS[fId] === oId;
+  state.pendingFeedback = { fId, oId, isCenter };
+  renderAll();
+}
+
+/* ----------- FINISH ----------- */
+function tryFinish() {
+  if (Object.keys(state.bridges).length < LEFT_ELEMS.length) {
+    const rem = LEFT_ELEMS.length - Object.keys(state.bridges).length;
+    showToast(`Ti restano ${rem} ponti da costruire.`, { duration: 2200 });
+    return;
+  }
+  if (state.pendingFeedback) {
+    showToast('Decidi prima sul ponte appena fatto: rivedere o tenere.', { duration: 2200 });
+    return;
+  }
+  showFinishOverlay();
+}
+
+function showFinishOverlay() {
+  let centered = 0, personal = 0;
+  Object.entries(state.bridges).forEach(([fId, oId]) => {
+    if (CENTERED_PAIRS[fId] === oId) centered++;
+    else personal++;
+  });
+  document.getElementById('m-centered').textContent = centered;
+  document.getElementById('m-personal').textContent = personal;
+
+  let body;
+  if (centered === 6) {
+    body = "Sei ponti, sei letture centrali. Hai colto quello che Rodari nel 1973 stava già raccontando della nostra epoca, prima che l'avessimo. Adesso però la domanda interessante diventa un'altra: cosa fai con questa lettura? La favola di Rodari finisce con un bambino che corre a fare i compiti. La tua come finisce?";
+  } else if (centered === 0) {
+    body = "Hai costruito sei ponti tutti tuoi: nessuno coincide con la lettura più canonica. Non è un errore — è una mappa concettuale personale. Però vale la pena che tu sappia che esiste anche un'altra mappa, e che le due insieme dicono più di una sola. Domanda: vuoi confrontare le tue letture con quelle dei compagni?";
+  } else if (centered >= 4) {
+    body = `${centered} ponti centrati, ${personal} letture personali. Hai trovato quasi tutte le connessioni che Rodari, in modo profetico, aveva preparato per noi. Le ${personal} letture tue sono altrettanto importanti: sono il tuo modo di leggere la favola. Domanda: in quale ponte personale c'è qualcosa che vorresti raccontare ad alta voce?`;
+  } else {
+    body = `${centered} ponti centrati, ${personal} letture personali. La tua mappa concettuale è ricca di interpretazioni proprie. La lettura più canonica dice che la favola anticipa il nostro presente in modi precisi: macchina → IA, gabbia → dipendenza, cervello → dati. Domanda: rileggi i tuoi ponti personali — c'è qualche cosa che ti colpisce, ora che hai finito?`;
+  }
+  document.getElementById('finish-body').innerHTML = body;
+
+  // Visibilità "Prossima chiave"
+  const nextBtn = document.getElementById('finish-next');
+  const nextLvl = LEVEL + 1;
+  const nextChiave = document.querySelector(`.chiave[data-level="${nextLvl}"]`);
+  const nextUrl = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  const canGoNext = nextChiave && !nextChiave.classList.contains('disabled') && nextUrl;
+  nextBtn.style.display = canGoNext ? '' : 'none';
+
+  document.getElementById('finish-overlay').classList.add('open');
+  markLevelCompleted(LEVEL);
+}
+
+function closeFinishOverlay() {
+  document.getElementById('finish-overlay').classList.remove('open');
+}
+
+function goToNextChiave() {
+  const nextLvl = LEVEL + 1;
+  const url = CHIAVI_INFO[nextLvl] && CHIAVI_INFO[nextLvl].url;
+  if (url) { closeFinishOverlay(); window.location.href = url; }
+}
+
+function restartLevel() {
+  if (!confirm('Vuoi ricominciare il Ponte? Tutti i ponti costruiti verranno cancellati.')) return;
+  state.bridges = {};
+  state.selectedLeft = null;
+  state.pendingFeedback = null;
+  closeFinishOverlay();
+  renderAll();
+}
+
+/* ----------- CHIAVE NAVIGATION ----------- */
+function onChiaveClick(btn) {
+  const lvl = parseInt(btn.dataset.level, 10);
+  if (lvl === LEVEL) return;
+  if (btn.classList.contains('disabled')) {
+    showToast(`${CHIAVI_INFO[lvl].name} sarà disponibile presto`);
+    return;
+  }
+  const url = btn.dataset.url || CHIAVI_INFO[lvl].url;
+  if (url) window.location.href = url;
+  else showToast(`${CHIAVI_INFO[lvl].name} non è ancora collegata`);
+}
+
+/* ----------- INIT ----------- */
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+
+  document.getElementById('btn-restart-top').addEventListener('click', restartLevel);
+  document.getElementById('btn-finish').addEventListener('click', tryFinish);
+
+  document.querySelectorAll('.chiave').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      onChiaveClick(btn);
+    });
+  });
+
+  document.getElementById('finish-back').addEventListener('click', closeFinishOverlay);
+  document.getElementById('finish-restart').addEventListener('click', restartLevel);
+  document.getElementById('finish-next').addEventListener('click', goToNextChiave);
+
+  // Redraw bridges on resize
+  window.addEventListener('resize', () => drawBridges());
+});
+</script>
+
+</body>
+</html>
